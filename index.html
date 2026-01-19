@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procedural Neighborhood Builder</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #1a1a1a;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .interactive {
+            pointer-events: auto;
+        }
+    </style>
+    <!-- Import Map for Three.js -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div id="canvas-container"></div>
+    <div id="ui-layer">
+        <div id="info-overlay" class="interactive">
+            <div id="time-display">Year: 1 | Day: 1</div>
+            <div id="speed-controls">
+                <button class="speed-btn" data-speed="0">⏸</button>
+                <button class="speed-btn active" data-speed="1">▶</button>
+                <button class="speed-btn" data-speed="2">▶▶</button>
+                <button class="speed-btn" data-speed="10">🚀</button>
+            </div>
+        </div>
+        <div id="pop-display">Pop: 0</div>
+        <div id="toolbar" class="interactive">
+            <!-- Toolbar will be injected here -->
+        </div>
+    </div>
+    <script type="module" src="./src/main.js"></script>
+</body>
+
+</html>

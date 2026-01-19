@@ -1,0 +1,94 @@
+#toolbar {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    gap: 10px;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tool-btn {
+    background: #333;
+    color: white;
+    border: 1px solid #555;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.tool-btn:hover {
+    background: #444;
+}
+
+.tool-btn.active {
+    background: #4a90e2;
+    border-color: #2171c7;
+}
+
+#info-overlay {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    color: white;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    top: auto;
+    /* Override previous top positioning */
+}
+
+#time-display {
+    font-weight: bold;
+    font-size: 16px;
+    font-family: monospace;
+}
+
+#speed-controls {
+    display: flex;
+    gap: 5px;
+}
+
+.speed-btn {
+    background: #444;
+    border: 1px solid #666;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.speed-btn:hover {
+    background: #555;
+}
+
+.speed-btn.active {
+    background: #4a90e2;
+    border-color: #2171c7;
+}
+
+#pop-display {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #4a90e2;
+    padding: 15px 25px;
+    border-radius: 8px;
+    font-size: 24px;
+    font-weight: bold;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-family: monospace;
+}
