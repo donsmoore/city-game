@@ -373,23 +373,7 @@ class Game {
             mesh = new THREE.Mesh(geometry, material);
             mesh.rotation.x = -Math.PI / 2;
         } else if (type === CONFIG.TYPES.PARK) {
-            mesh = new THREE.Group();
-            const gGeo = new THREE.CylinderGeometry(CONFIG.CELL_SIZE * 0.4, CONFIG.CELL_SIZE * 0.4, 0.2, 8);
-            const gMat = new THREE.MeshLambertMaterial({ color: 0x2d4c1e });
-            const base = new THREE.Mesh(gGeo, gMat);
-            base.position.y = 0.1;
-            mesh.add(base);
-            const tGeo = new THREE.CylinderGeometry(CONFIG.CELL_SIZE * 0.05, CONFIG.CELL_SIZE * 0.05, 1.5, 6);
-            const tMat = new THREE.MeshLambertMaterial({ color: 0x5c4033 });
-            const trunk = new THREE.Mesh(tGeo, tMat);
-            trunk.position.y = 0.75;
-            mesh.add(trunk);
-            const lGeo = new THREE.ConeGeometry(CONFIG.CELL_SIZE * 0.3, 2, 8);
-            const lMat = new THREE.MeshLambertMaterial({ color: 0x1e5927 });
-            const leaves = new THREE.Mesh(lGeo, lMat);
-            leaves.position.y = 1.8;
-            mesh.add(leaves);
-
+            mesh = ModelFactory.createParkMesh();
         } else if (type === CONFIG.TYPES.SCHOOL) {
             mesh = ModelFactory.createSchoolMesh();
         } else if (type === CONFIG.TYPES.HOSPITAL) {
