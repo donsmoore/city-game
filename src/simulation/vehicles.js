@@ -10,7 +10,8 @@ export class VehicleSystem {
         this.spawnTimer = 0;
     }
 
-    update(deltaTime, speedMultiplier) {
+    update(deltaTime, speedMultiplier, population) {
+        this.currentPopulation = population; // Store for spawn logic
         if (speedMultiplier === 0) return;
 
         // Move Vehicles
