@@ -239,6 +239,76 @@ export const ModelFactory = {
         return group;
     },
 
+    createParkMesh: () => {
+        const group = new THREE.Group();
+        const cellSize = CONFIG.CELL_SIZE;
+
+        // Base Grass Patch
+        const gGeo = new THREE.CylinderGeometry(cellSize * 0.45, cellSize * 0.45, 0.4, 16);
+        const gMat = new THREE.MeshLambertMaterial({ color: 0x2d4c1e });
+        const base = new THREE.Mesh(gGeo, gMat);
+        base.position.y = 0.2;
+        group.add(base);
+
+        // Pathway (Grey strip)
+        const pGeo = new THREE.BoxGeometry(cellSize * 0.9, 0.1, cellSize * 0.15);
+        const pMat = new THREE.MeshLambertMaterial({ color: 0x777777 });
+        const path = new THREE.Mesh(pGeo, pMat);
+        path.position.y = 0.41;
+        group.add(path);
+
+        // Trees (3 of them, different spots and heights)
+        const treeCreator = (x, z, scale) => {
+            const tree = new THREE.Group();
+
+            // Trunk (Scaled 300%)
+            const trunkGeo = new THREE.CylinderGeometry(cellSize * 0.05, cellSize * 0.05, 1.5 * 3 * scale, 6);
+            const trunkMat = new THREE.MeshLambertMaterial({ color: 0x5c4033 });
+            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+            trunk.position.y = (1.5 * 3 * scale) / 2;
+            tree.add(trunk);
+
+            // Leaves (Scaled 300%)
+            const leafGeo = new THREE.ConeGeometry(cellSize * 0.3, 2 * 3 * scale, 8);
+            const leafMat = new THREE.MeshLambertMaterial({ color: 0x1e5927 });
+            const leaves = new THREE.Mesh(leafGeo, leafMat);
+            leaves.position.y = (1.5 * 3 * scale) + (2 * 3 * scale) / 2 - 0.5;
+            tree.add(leaves);
+
+            tree.position.set(x, 0.4, z);
+            return tree;
+        };
+
+        group.add(treeCreator(-cellSize * 0.25, -cellSize * 0.15, 0.8));
+        group.add(treeCreator(cellSize * 0.2, cellSize * 0.2, 1.0));
+        group.add(treeCreator(-cellSize * 0.1, cellSize * 0.25, 0.6));
+
+        // Bench
+        const benchGroup = new THREE.Group();
+        const woodMat = new THREE.MeshLambertMaterial({ color: 0x8b4513 });
+
+        // Seat
+        const seatGeo = new THREE.BoxGeometry(1.5, 0.2, 0.6);
+        const seat = new THREE.Mesh(seatGeo, woodMat);
+        seat.position.y = 0.5;
+        benchGroup.add(seat);
+
+        // Legs
+        const legGeo = new THREE.BoxGeometry(0.1, 0.5, 0.1);
+        const leg1 = new THREE.Mesh(legGeo, woodMat);
+        leg1.position.set(-0.6, 0.25, 0.2);
+        benchGroup.add(leg1);
+        const leg2 = leg1.clone();
+        leg2.position.set(0.6, 0.25, 0.2);
+        benchGroup.add(leg2);
+
+        benchGroup.position.set(cellSize * 0.1, 0.4, -cellSize * 0.2);
+        benchGroup.rotation.y = Math.PI / 4;
+        group.add(benchGroup);
+
+        return group;
+    },
+
     createRoadMesh: (type) => {
         // ... handled in main currently, but could move here
     }
