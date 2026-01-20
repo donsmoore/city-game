@@ -78,9 +78,9 @@ export class InputManager {
                 icon: '🌳',
                 label: 'Build Park',
                 subTools: [
-                    { id: 'park:1:1', label: '1x1 Park', icon: '1x1' },
+                    { id: 'park:2:2', label: '2x2 Park', icon: '2x2' },
                     { id: 'park:1:2', label: '1x2 Park', icon: '1x2' },
-                    { id: 'park:2:2', label: '2x2 Park', icon: '2x2' }
+                    { id: 'park:1:1', label: '1x1 Park', icon: '1x1' }
                 ]
             },
             { id: 'school', icon: '🏫', label: 'Build School' },
