@@ -219,8 +219,11 @@ class Game {
                     if (meta && existing.userData.height === meta.height && existing.userData.subtype === meta.subtype) {
                         return; // No change needed
                     }
+                } else if (type === CONFIG.TYPES.ROAD_MAJOR || type === CONFIG.TYPES.ROAD_MINOR) {
+                    // Roads always need re-evaluation because neighbors might have changed
+                    // Fall through to removal and re-creation
                 } else {
-                    return; // No change needed for static types
+                    return; // No change needed for other static types
                 }
             }
             // If mismatch, remove existing
