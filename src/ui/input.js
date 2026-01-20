@@ -47,19 +47,11 @@ export class InputManager {
     }
 
     setupToolbar() {
-        // Yellow Bulldozer SVG
-        const bulldozerSVG = `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#f1c40f" width="24px" height="24px">
-            <path d="M0 0h24v24H0z" fill="none"/>
-            <path d="M19.57 7.78c-.76-2.58-1.55-4.58-1.57-4.63-.16-.4-.53-.65-.95-.65h-5.1c-.42 0-.8.26-.94.66L9.6 7.6c-.02.06-.82 2.37-1.4 5.4H4v7h16v-7h-4.2c.49-1.34 1.25-3.08 1.67-4.14.03.04.05.08.09.12l.14.15c.61.64 1.48 1.02 2.38 1.02V7.78h-.08zM18 18H6v-3h12v3zm-3.04-5h-4.6l1.2-3.6h2.2l1.2 3.6z"/>
-            <rect x="2" y="16" width="3" height="4" rx="1" fill="#f1c40f"/>
-        </svg>`;
-
         const tools = [
             { id: 'road_major', icon: '<div class="icon-road"></div>', label: 'Build Road' },
             { id: 'park', icon: '🌳', label: 'Build Park' },
             { id: 'school', icon: '🏫', label: 'Build School' },
-            { id: 'delete', icon: bulldozerSVG, label: 'Bulldoze', className: 'btn-delete' }
+            { id: 'delete', icon: '<img src="assets/bulldozer.png" style="width: 24px; height: 24px; object-fit: contain;">', label: 'Bulldoze', className: 'btn-delete' }
         ];
 
         const toolbar = document.getElementById('toolbar');
