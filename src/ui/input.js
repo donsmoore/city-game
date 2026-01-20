@@ -8,6 +8,7 @@ export class InputManager {
         this.onAction = onAction;
         this.onPreview = onPreview;
         this.activeTool = 'road_major';
+        this.isRotated = false;
 
         this.isMouseDown = false;
         this.dragStartGrid = null;
@@ -15,6 +16,28 @@ export class InputManager {
 
         this.setupEventListeners();
         this.setupToolbar();
+        this.setupKeyboardListeners();
+    }
+
+    setupKeyboardListeners() {
+        window.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'r') {
+                this.isRotated = !this.isRotated;
+                // Force cursor update
+                if (this.lastMouseEvent) this.updateCursor(this.lastMouseEvent);
+            }
+        });
+    }
+
+    getToolDimensions() {
+        if (this.activeTool.startsWith('park:')) {
+            const parts = this.activeTool.split(':');
+            let w = parseInt(parts[1]);
+            let d = parseInt(parts[2]);
+            if (this.isRotated) return { w: d, d: w };
+            return { w, d };
+        }
+        return { w: 1, d: 1 };
     }
 
     setupEventListeners() {
@@ -29,6 +52,7 @@ export class InputManager {
         });
 
         window.addEventListener('mousemove', (e) => {
+            this.lastMouseEvent = e;
             if (this.isMouseDown) {
                 this.handleInput(e, false);
             }
@@ -231,13 +255,19 @@ export class InputManager {
         } else {
             if (isCommit) return;
             if (this.activeTool !== 'road_major' && this.activeTool !== 'road_minor') {
-                this.onAction(this.activeTool, gridPos, gridPos);
+                let toolStr = this.activeTool;
+                if (this.activeTool.startsWith('park:')) {
+                    const dims = this.getToolDimensions();
+                    toolStr = `park:${dims.w}:${dims.d}`;
+                }
+                this.onAction(toolStr, gridPos, gridPos);
             }
         }
     }
 
     updateCursor(event) {
         const target = this.sceneManager.raycast(event.clientX, event.clientY);
+        const dims = this.getToolDimensions();
 
         if (!this.cursorMesh) {
             if (this.sceneManager.scene) {
@@ -246,6 +276,11 @@ export class InputManager {
                 this.cursorMesh = new THREE.Mesh(geometry, material);
                 this.sceneManager.scene.add(this.cursorMesh);
             }
+        }
+
+        // Scale cursor to match tool
+        if (this.cursorMesh) {
+            this.cursorMesh.scale.set(dims.w, 1, dims.d);
         }
 
         let visible = false;
@@ -270,7 +305,12 @@ export class InputManager {
         if (this.cursorMesh && visible) {
             this.cursorMesh.visible = true;
             const worldPos = this.gridToWorld(gridPos.x, gridPos.z);
-            this.cursorMesh.position.set(worldPos.x, 0.5, worldPos.z);
+
+            // Adjust position for multi-tile preview so it aligns with pivot
+            const offsetX = (dims.w - 1) * CONFIG.CELL_SIZE / 2;
+            const offsetZ = (dims.d - 1) * CONFIG.CELL_SIZE / 2;
+
+            this.cursorMesh.position.set(worldPos.x + offsetX, 0.5, worldPos.z + offsetZ);
         }
     }
 }
