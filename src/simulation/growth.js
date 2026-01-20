@@ -174,12 +174,15 @@ export class GrowthSystem {
             const idx = this.grid.getIndex(cell.x, cell.z);
             this.grid.cells[idx] = CONFIG.TYPES.BUILDING;
 
-            // Metadata only on root (top-left) for renderer
-            if (cell.x === x && cell.z === z) {
-                this.grid.metadata[idx] = buildingMeta;
-            } else {
-                this.grid.metadata[idx] = null;
-            }
+            // Metadata on all cells so bulldozer knows where the root is
+            this.grid.metadata[idx] = {
+                ...buildingMeta,
+                isPivot: (cell.x === x && cell.z === z),
+                rootX: x,
+                rootZ: z,
+                width: w,
+                depth: d
+            };
         }
     }
 }

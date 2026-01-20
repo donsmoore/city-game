@@ -182,7 +182,9 @@ class Game {
                                     type: 'park',
                                     width: w,
                                     depth: d,
-                                    isPivot: isPivot
+                                    isPivot: isPivot,
+                                    rootX: x,
+                                    rootZ: z
                                 };
                             }
                         }
@@ -208,8 +210,26 @@ class Game {
                     }
                 } else if (tool === 'delete') {
                     if (currentType !== CONFIG.TYPES.EMPTY) {
-                        this.grid.setCell(x, z, CONFIG.TYPES.EMPTY);
-                        this.grid.metadata[this.grid.getIndex(x, z)] = null;
+                        const meta = this.grid.metadata[this.grid.getIndex(x, z)];
+                        if (meta && meta.rootX !== undefined && meta.rootZ !== undefined) {
+                            // Smart delete for multi-tile objects
+                            const rw = meta.width || 1;
+                            const rd = meta.depth || 1;
+                            const rx = meta.rootX;
+                            const rz = meta.rootZ;
+                            for (let dx = 0; dx < rw; dx++) {
+                                for (let dz = 0; dz < rd; dz++) {
+                                    const tx = rx + dx;
+                                    const tz = rz + dz;
+                                    this.grid.setCell(tx, tz, CONFIG.TYPES.EMPTY);
+                                    this.grid.metadata[this.grid.getIndex(tx, tz)] = null;
+                                }
+                            }
+                        } else {
+                            // Simple delete
+                            this.grid.setCell(x, z, CONFIG.TYPES.EMPTY);
+                            this.grid.metadata[this.grid.getIndex(x, z)] = null;
+                        }
                         changed = true;
                     }
                 }
@@ -270,7 +290,7 @@ class Game {
         let mesh;
 
         if (type === CONFIG.TYPES.BUILDING) {
-            if (meta) {
+            if (meta && meta.isPivot !== false) {
                 // It is a root cell
                 let w = 1, d = 1;
                 if (meta.cells) {
