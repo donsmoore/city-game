@@ -137,10 +137,22 @@
     display: none;
     flex-direction: column;
     gap: 5px;
-    margin-bottom: 15px;
+    bottom: calc(100% + 10px);
+    /* Position it slightly above the button */
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     z-index: 1000;
+}
+
+/* Invisible bridge to keep hover active across the gap */
+.sub-tool-container::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: 15px;
+    background: transparent;
 }
 
 .tool-btn:hover .sub-tool-container,
