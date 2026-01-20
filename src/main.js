@@ -351,12 +351,17 @@ class Game {
             mesh.add(lines);
 
             // Hide dot if intersection?
-            // User didn't ask about dots. Keeping them.
+            // User didn't ask about dots, but asked for black squares at intersections.
             const dGeo = new THREE.PlaneGeometry(1, 1);
             const dMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
             const dot = new THREE.Mesh(dGeo, dMat);
             dot.rotation.x = -Math.PI / 2;
             dot.position.y = 0.06;
+
+            if (connectedX && connectedZ) {
+                dot.visible = false;
+            }
+
             mesh.add(dot);
 
         } else if (type === CONFIG.TYPES.LOT) {
