@@ -46,8 +46,7 @@ export class GrowthSystem {
                     if (meta) {
                         const hasAmenities = this.checkAmenities(
                             Math.floor(i % this.grid.width),
-                            Math.floor(i / this.grid.width),
-                            5
+                            Math.floor(i / this.grid.width)
                         );
 
                         const cap = hasAmenities ? 20 : 10;
@@ -79,20 +78,39 @@ export class GrowthSystem {
         return changed; // Return true if re-render needed
     }
 
-    checkAmenities(x, z, radius) {
+    checkAmenities(x, z) {
         let hasPark = false;
         let hasSchool = false;
 
-        const xMin = Math.max(0, x - radius);
-        const xMax = Math.min(this.grid.width - 1, x + radius);
-        const zMin = Math.max(0, z - radius);
-        const zMax = Math.min(this.grid.height - 1, z + radius);
+        const maxRadius = 8; // Max AoE from large park
+        const xMin = Math.max(0, x - maxRadius);
+        const xMax = Math.min(this.grid.width - 1, x + maxRadius);
+        const zMin = Math.max(0, z - maxRadius);
+        const zMax = Math.min(this.grid.height - 1, z + maxRadius);
 
         for (let ix = xMin; ix <= xMax; ix++) {
             for (let iz = zMin; iz <= zMax; iz++) {
                 const type = this.grid.getCell(ix, iz);
-                if (type === CONFIG.TYPES.PARK) hasPark = true;
-                if (type === CONFIG.TYPES.SCHOOL) hasSchool = true;
+                const dist = Math.max(Math.abs(x - ix), Math.abs(z - iz));
+
+                if (type === CONFIG.TYPES.SCHOOL) {
+                    if (dist <= 5) hasSchool = true;
+                }
+
+                if (type === CONFIG.TYPES.PARK) {
+                    const idx = this.grid.getIndex(ix, iz);
+                    const meta = this.grid.metadata[idx];
+                    let parkRadius = 4; // Default Small
+
+                    if (meta) {
+                        const area = (meta.width || 1) * (meta.depth || 1);
+                        if (area === 4) parkRadius = 8; // Large
+                        else if (area === 2) parkRadius = 5; // Medium
+                    }
+
+                    if (dist <= parkRadius) hasPark = true;
+                }
+
                 if (hasPark && hasSchool) return true;
             }
         }

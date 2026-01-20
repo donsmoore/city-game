@@ -78,9 +78,9 @@ export class InputManager {
                 icon: '🌳',
                 label: 'Build Park',
                 subTools: [
-                    { id: 'park:2:2', label: '2x2 Park', icon: '2x2' },
-                    { id: 'park:1:2', label: '1x2 Park', icon: '1x2' },
-                    { id: 'park:1:1', label: '1x1 Park', icon: '1x1' }
+                    { id: 'park:2:2', label: 'Large Park (2x2, AoE: 8tiles)', icon: '<img src="assets/park_2x2.png" style="width: 24px; height: 24px;">' },
+                    { id: 'park:1:2', label: 'Medium Park (1x2, AoE: 5tiles)', icon: '<img src="assets/park_1x2.png" style="width: 24px; height: 24px;">' },
+                    { id: 'park:1:1', label: 'Small Park (1x1, AoE: 4tiles)', icon: '<img src="assets/park_1x1.png" style="width: 24px; height: 24px;">' }
                 ]
             },
             { id: 'school', icon: '🏫', label: 'Build School' },
