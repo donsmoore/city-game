@@ -6,11 +6,13 @@ export const CONFIG = {
     TYPES: {
         EMPTY: 0,
         ROAD_MAJOR: 1,
-        ROAD_MINOR: 2,
+        ROAD_MINOR: 2, // Deprecated but ID kept
         LOT: 3,
         BUILDING: 4,
         PARK: 5,
-        SCHOOL: 6
+        SCHOOL: 6,
+        HOSPITAL: 7,
+        FIRE_STATION: 8
     },
 
     // Visuals
@@ -20,6 +22,8 @@ export const CONFIG = {
         ROAD_MAJOR: 0x555555,
         ROAD_MINOR: 0x444444,
         LOT_GRASS: 0x2d4c1e,
+        HOSPITAL: 0xffffff,
+        FIRE_STATION: 0xb93a32,
     },
 
     PALETTE: [

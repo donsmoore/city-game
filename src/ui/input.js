@@ -51,6 +51,8 @@ export class InputManager {
             { id: 'road_major', icon: '<div class="icon-road"></div>', label: 'Build Road' },
             { id: 'park', icon: '🌳', label: 'Build Park' },
             { id: 'school', icon: '🏫', label: 'Build School' },
+            { id: 'hospital', icon: '🏥', label: 'Build Hospital' },
+            { id: 'fire_station', icon: '🚒', label: 'Build Fire Station' },
             { id: 'delete', icon: '<img src="assets/bulldozer.png?v=' + Date.now() + '" style="width: 24px; height: 24px; object-fit: contain;">', label: 'Bulldoze', className: 'btn-delete' }
         ];
 
