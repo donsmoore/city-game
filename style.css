@@ -16,16 +16,17 @@
     background: #333;
     color: white;
     border: 1px solid #555;
-    padding: 10px 15px;
+    padding: 6px;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    font-size: 24px;
-    line-height: 1;
-    min-width: 50px;
-    text-align: center;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: relative;
-    /* For tooltip? Browsers handle title attr automatically but we can do custom later if needed */
+    font-size: 24px;
 }
 
 .tool-btn:hover {
@@ -35,13 +36,38 @@
     z-index: 10;
 }
 
-.tool-btn:hover {
-    background: #444;
-}
-
 .tool-btn.active {
     background: #4a90e2;
     border-color: #2171c7;
+}
+
+/* Custom Road Icon: Black rect with dashed center */
+.icon-road {
+    width: 24px;
+    height: 24px;
+    background: #111;
+    position: relative;
+    border-radius: 2px;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.icon-road::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    background: linear-gradient(to bottom, white 0%, white 30%, transparent 30%, transparent 70%, white 70%, white 100%);
+    background-size: 100% 6px;
+    /* Dash pattern */
+    background-repeat: repeat-y;
+}
+
+/* Yellow Bulldozer Style */
+.btn-delete {
+    /* Optional specific styling for delete button container */
 }
 
 #info-overlay {
@@ -57,7 +83,6 @@
     gap: 8px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     top: auto;
-    /* Override previous top positioning */
 }
 
 #time-display {
