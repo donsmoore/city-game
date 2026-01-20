@@ -391,48 +391,11 @@ class Game {
             mesh.add(leaves);
 
         } else if (type === CONFIG.TYPES.SCHOOL) {
-            const geometry = new THREE.BoxGeometry(CONFIG.CELL_SIZE * 0.8, 1, CONFIG.CELL_SIZE * 0.8);
-            const material = new THREE.MeshLambertMaterial({ color: 0xffff00 });
-            mesh = new THREE.Mesh(geometry, material);
-            mesh.position.y = 0.5;
+            mesh = ModelFactory.createSchoolMesh();
         } else if (type === CONFIG.TYPES.HOSPITAL) {
-            mesh = new THREE.Group();
-            // Main white block
-            const bGeo = new THREE.BoxGeometry(CONFIG.CELL_SIZE * 0.8, 2, CONFIG.CELL_SIZE * 0.6);
-            const bMat = new THREE.MeshLambertMaterial({ color: CONFIG.COLORS.HOSPITAL });
-            const building = new THREE.Mesh(bGeo, bMat);
-            building.position.y = 1;
-            mesh.add(building);
-
-            // Red Cross
-            const cGeo = new THREE.BoxGeometry(0.8, 0.8, 0.2);
-            const cMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-            const cross1 = new THREE.Mesh(cGeo, cMat);
-            cross1.position.set(0, 1.5, CONFIG.CELL_SIZE * 0.3 + 0.1);
-            mesh.add(cross1);
-            const cross2 = new THREE.Mesh(cGeo, cMat);
-            cross2.rotation.z = Math.PI / 2;
-            cross2.position.set(0, 1.5, CONFIG.CELL_SIZE * 0.3 + 0.1);
-            mesh.add(cross2);
-
+            mesh = ModelFactory.createHospitalMesh();
         } else if (type === CONFIG.TYPES.FIRE_STATION) {
-            mesh = new THREE.Group();
-            // Main Red Block
-            const bGeo = new THREE.BoxGeometry(CONFIG.CELL_SIZE * 0.9, 1.5, CONFIG.CELL_SIZE * 0.8);
-            const bMat = new THREE.MeshLambertMaterial({ color: CONFIG.COLORS.FIRE_STATION });
-            const building = new THREE.Mesh(bGeo, bMat);
-            building.position.y = 0.75;
-            mesh.add(building);
-
-            // Garage Doors (Grey/Black)
-            const dGeo = new THREE.PlaneGeometry(3, 1.2);
-            const dMat = new THREE.MeshBasicMaterial({ color: 0x333333 });
-            const door1 = new THREE.Mesh(dGeo, dMat);
-            door1.position.set(-2, 0.6, CONFIG.CELL_SIZE * 0.4 + 0.05);
-            mesh.add(door1);
-            const door2 = new THREE.Mesh(dGeo, dMat);
-            door2.position.set(2, 0.6, CONFIG.CELL_SIZE * 0.4 + 0.05);
-            mesh.add(door2);
+            mesh = ModelFactory.createFireStationMesh();
         }
 
         if (mesh) {
