@@ -11,12 +11,15 @@ export class InputManager {
 
         this.isMouseDown = false;
         this.dragStartGrid = null;
+        this.lastValidGrid = null;
 
         this.setupEventListeners();
         this.setupToolbar();
     }
 
     setupEventListeners() {
+        // Use window for mouse events to track off-canvas dragging
+        // Mousedown must be on canvas to start
         const canvas = this.sceneManager.renderer.domElement;
 
         canvas.addEventListener('mousedown', (e) => {
@@ -27,14 +30,14 @@ export class InputManager {
             }
         });
 
-        canvas.addEventListener('mousemove', (e) => {
+        window.addEventListener('mousemove', (e) => {
             if (this.isMouseDown) {
                 this.handleInput(e, false);
             }
             this.updateCursor(e);
         });
 
-        canvas.addEventListener('mouseup', (e) => {
+        window.addEventListener('mouseup', (e) => {
             if (this.isMouseDown && e.button === 0) {
                 this.handleInput(e, true);
                 this.isMouseDown = false;
@@ -89,6 +92,9 @@ export class InputManager {
         let gridPos = null;
 
         // 1. Try standard Raycast (objects)
+        // Note: raycast expects client coords relative to window if using full screen renderer logic?
+        // SceneManager.raycast usually uses normalized device coords.
+        // Assuming SceneManager handles the clientX/Y conversion to NDC internally or accepts raw client.
         const target = this.sceneManager.raycast(event.clientX, event.clientY);
 
         if (target) {
@@ -106,15 +112,27 @@ export class InputManager {
 
             if (raycaster.ray.intersectPlane(plane, hit)) {
                 gridPos = this.worldToGrid(hit.x, hit.z);
-                // Clamp to Grid Size
-                gridPos.x = Math.max(0, Math.min(CONFIG.GRID_SIZE - 1, gridPos.x));
-                gridPos.z = Math.max(0, Math.min(CONFIG.GRID_SIZE - 1, gridPos.z));
             }
+        }
+
+        // 3. Fallback: Sticky Edge (Last known valid)
+        // If we still have no gridPos (aiming at sky and missing plane?), use last valid.
+        if (!gridPos && this.isMouseDown && this.lastValidGrid) {
+            gridPos = { ...this.lastValidGrid };
         }
 
         if (!gridPos) return;
 
-        // Standard Bounds check (double check after clamping)
+        // Clamp to Grid Size
+        gridPos.x = Math.max(0, Math.min(CONFIG.GRID_SIZE - 1, gridPos.x));
+        gridPos.z = Math.max(0, Math.min(CONFIG.GRID_SIZE - 1, gridPos.z));
+
+        // Store as last valid (after clamping is safer)
+        if (this.isMouseDown) {
+            this.lastValidGrid = { ...gridPos };
+        }
+
+        // Final Bounds check (redundant after clamp but good for sanity)
         if (gridPos.x < 0 || gridPos.x >= CONFIG.GRID_SIZE || gridPos.z < 0 || gridPos.z >= CONFIG.GRID_SIZE) return;
 
         // Straight Line Constraint for Roads
@@ -172,8 +190,10 @@ export class InputManager {
             visible = true;
         }
 
-        // Also check if dragging and offscreen? 
-        // nah, cursor mesh usually stays on grid.
+        // Show cursor if valid target. If off-screen, maybe hide?
+        // Or show on edge? 
+        // Let's hide if off-map to avoid confusion, but show if dragging.
+        // Actually, let's keep it simple: Show if Ray hit something valid.
 
         if (visible) {
             if (gridPos.x < 0 || gridPos.x >= CONFIG.GRID_SIZE || gridPos.z < 0 || gridPos.z >= CONFIG.GRID_SIZE) {
