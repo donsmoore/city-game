@@ -5,8 +5,8 @@ export class InputManager {
     constructor(sceneManager, grid, onAction, onPreview) {
         this.sceneManager = sceneManager;
         this.grid = grid;
-        this.onAction = onAction; // Callback for commit (tool, start, end)
-        this.onPreview = onPreview; // Callback for ghost (tool, start, end)
+        this.onAction = onAction;
+        this.onPreview = onPreview;
         this.activeTool = 'road_major';
 
         this.isMouseDown = false;
@@ -17,37 +17,32 @@ export class InputManager {
     }
 
     setupEventListeners() {
-        // Interaction on canvas
         const canvas = this.sceneManager.renderer.domElement;
 
         canvas.addEventListener('mousedown', (e) => {
-            if (e.button === 0) { // Left click
+            if (e.button === 0) {
                 this.isMouseDown = true;
-                if (this.cursorMesh) this.cursorMesh.material.color.setHex(0x00ff00); // Green
-                this.handleInput(e, false); // Preview only
+                if (this.cursorMesh) this.cursorMesh.material.color.setHex(0x00ff00);
+                this.handleInput(e, false);
             }
         });
 
         canvas.addEventListener('mousemove', (e) => {
             if (this.isMouseDown) {
-                this.handleInput(e, false); // Preview
+                this.handleInput(e, false);
             }
             this.updateCursor(e);
         });
 
         canvas.addEventListener('mouseup', (e) => {
             if (this.isMouseDown && e.button === 0) {
-                this.handleInput(e, true); // Commit
+                this.handleInput(e, true);
                 this.isMouseDown = false;
-                this.dragStartGrid = null; // Reset constraint
-                if (this.cursorMesh) this.cursorMesh.material.color.setHex(0xffffff); // White release
-
-                // Clear preview on release
+                this.dragStartGrid = null;
+                if (this.cursorMesh) this.cursorMesh.material.color.setHex(0xffffff);
                 if (this.onPreview) this.onPreview(null, null, null);
             }
         });
-
-        // Add pan/zoom listeners later (right click or scroll)
     }
 
     setupToolbar() {
@@ -60,7 +55,7 @@ export class InputManager {
         ];
 
         const toolbar = document.getElementById('toolbar');
-        toolbar.innerHTML = ''; // Clear
+        toolbar.innerHTML = '';
 
         tools.forEach(tool => {
             const btn = document.createElement('button');
@@ -91,35 +86,51 @@ export class InputManager {
     }
 
     handleInput(event, isCommit) {
+        let gridPos = null;
+
+        // 1. Try standard Raycast (objects)
         const target = this.sceneManager.raycast(event.clientX, event.clientY);
-        if (!target) return;
 
-        let gridPos = this.worldToGrid(target.x, target.z);
+        if (target) {
+            gridPos = this.worldToGrid(target.x, target.z);
+        } else {
+            // 2. Fallback: Plane Intersection (Y=0) for dragging off-screen
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-        // Bounds check
-        if (gridPos.x < 0 || gridPos.x >= CONFIG.GRID_SIZE || gridPos.z < 0 || gridPos.z >= CONFIG.GRID_SIZE) return;
+            raycaster.setFromCamera(mouse, this.sceneManager.camera);
+            const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+            const hit = new THREE.Vector3();
 
-        // Straight Line Constraint for Roads
-        // Only valid if we have a start point
-        if (this.isMouseDown && (this.activeTool === 'road_major' || this.activeTool === 'road_minor')) {
-            if (!this.dragStartGrid) {
-                this.dragStartGrid = gridPos; // Set start
-            } else {
-                const dx = Math.abs(gridPos.x - this.dragStartGrid.x);
-                const dz = Math.abs(gridPos.z - this.dragStartGrid.z);
-
-                if (dx > dz) {
-                    gridPos.z = this.dragStartGrid.z; // Lock Z, move X
-                } else {
-                    gridPos.x = this.dragStartGrid.x; // Lock X, move Z
-                }
+            if (raycaster.ray.intersectPlane(plane, hit)) {
+                gridPos = this.worldToGrid(hit.x, hit.z);
+                // Clamp to Grid Size
+                gridPos.x = Math.max(0, Math.min(CONFIG.GRID_SIZE - 1, gridPos.x));
+                gridPos.z = Math.max(0, Math.min(CONFIG.GRID_SIZE - 1, gridPos.z));
             }
         }
 
-        // If not a road tool, start and end are same (single cell action usually)
-        // But for dragging bulldozers etc we might want range too. 
-        // For simplicity: Roads use drag range. Others use repeated single cells?
-        // User requested drag commit for ROADS.
+        if (!gridPos) return;
+
+        // Standard Bounds check (double check after clamping)
+        if (gridPos.x < 0 || gridPos.x >= CONFIG.GRID_SIZE || gridPos.z < 0 || gridPos.z >= CONFIG.GRID_SIZE) return;
+
+        // Straight Line Constraint for Roads
+        if (this.isMouseDown && (this.activeTool === 'road_major' || this.activeTool === 'road_minor')) {
+            if (!this.dragStartGrid) {
+                this.dragStartGrid = gridPos;
+            } else {
+                const dx = Math.abs(gridPos.x - this.dragStartGrid.x);
+                const dz = Math.abs(gridPos.z - this.dragStartGrid.z);
+                if (dx > dz) {
+                    gridPos.z = this.dragStartGrid.z;
+                } else {
+                    gridPos.x = this.dragStartGrid.x;
+                }
+            }
+        }
 
         let start = gridPos;
         let end = gridPos;
@@ -134,25 +145,8 @@ export class InputManager {
                 this.onPreview(this.activeTool, start, end);
             }
         } else {
-            // For other tools (place single item), maybe commit immediately on mousedown?
-            // "Ghost" for single item is just the cursor.
-            // But strict requirement: "Ghost road until finished".
-
-            // If we drag delete, that's fine to keep as is? 
-            // "Misses some tiles" implies valid drag for everything is nice.
-            // Let's uniform it: Drag = Preview, Release = Commit for everything?
-            // Park/School are point-click. Dragging them spawns many?
-            // Let's keep Park/School as point click (commit on mousedown for immediate feedback).
-            // But Roads use the new flow.
-
-            if (isCommit) return; // Don't re-do on mouse up for single click tools if we did on down
-
-            // Actually, best internal logic:
-            // Roads: Commit on Up. Preview on Down/Move.
-            // Others: Commit on Down/Move (Paint mode). Preview cursor only.
-
+            if (isCommit) return;
             if (this.activeTool !== 'road_major' && this.activeTool !== 'road_minor') {
-                // Paint mode (immediate)
                 this.onAction(this.activeTool, gridPos, gridPos);
             }
         }
@@ -161,9 +155,7 @@ export class InputManager {
     updateCursor(event) {
         const target = this.sceneManager.raycast(event.clientX, event.clientY);
 
-        // Lazy initialization of cursor mesh
         if (!this.cursorMesh) {
-            // Check if scene exists
             if (this.sceneManager.scene) {
                 const geometry = new THREE.BoxGeometry(CONFIG.CELL_SIZE, 0.5, CONFIG.CELL_SIZE);
                 const material = new THREE.MeshBasicMaterial({ color: 0xffffff, opacity: 0.3, transparent: true });
@@ -172,20 +164,29 @@ export class InputManager {
             }
         }
 
-        if (!target) {
-            if (this.cursorMesh) this.cursorMesh.visible = false;
+        let visible = false;
+        let gridPos = null;
+
+        if (target) {
+            gridPos = this.worldToGrid(target.x, target.z);
+            visible = true;
+        }
+
+        // Also check if dragging and offscreen? 
+        // nah, cursor mesh usually stays on grid.
+
+        if (visible) {
+            if (gridPos.x < 0 || gridPos.x >= CONFIG.GRID_SIZE || gridPos.z < 0 || gridPos.z >= CONFIG.GRID_SIZE) {
+                visible = false;
+            }
+        }
+
+        if (!visible && this.cursorMesh) {
+            this.cursorMesh.visible = false;
             return;
         }
 
-        const gridPos = this.worldToGrid(target.x, target.z);
-
-        // Bounds check
-        if (gridPos.x < 0 || gridPos.x >= CONFIG.GRID_SIZE || gridPos.z < 0 || gridPos.z >= CONFIG.GRID_SIZE) {
-            if (this.cursorMesh) this.cursorMesh.visible = false;
-            return;
-        }
-
-        if (this.cursorMesh) {
+        if (this.cursorMesh && visible) {
             this.cursorMesh.visible = true;
             const worldPos = this.gridToWorld(gridPos.x, gridPos.z);
             this.cursorMesh.position.set(worldPos.x, 0.5, worldPos.z);

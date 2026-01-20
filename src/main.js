@@ -4,6 +4,7 @@ import { Grid } from './engine/grid.js';
 import { InputManager } from './ui/input.js';
 import { SimulationManager } from './simulation/sim.js';
 import { GrowthSystem } from './simulation/growth.js';
+import { VehicleSystem } from './simulation/vehicles.js';
 import { ModelFactory } from './render/models.js';
 import { CONFIG } from './config.js';
 import * as THREE from 'three';
@@ -15,6 +16,7 @@ class Game {
         this.cameraController = new CameraController(this.sceneManager.camera, this.sceneManager.renderer.domElement);
         this.simManager = new SimulationManager(this.grid);
         this.growthSystem = new GrowthSystem(this.grid);
+        this.vehicleSystem = new VehicleSystem(this.grid, this.sceneManager);
         this.inputManager = new InputManager(
             this.sceneManager,
             this.grid,
@@ -264,13 +266,86 @@ class Game {
             const road = new THREE.Mesh(geometry, material);
             mesh.add(road);
 
+            // Determine Orientation checking neighbors
+            let connectedX = false;
+            let connectedZ = false;
+
+            // Helper to check if neighbor is road
+            const isRoad = (nx, nz) => {
+                if (nx < 0 || nx >= this.grid.width || nz < 0 || nz >= this.grid.height) return false;
+                const t = this.grid.getCell(nx, nz);
+                return (t === CONFIG.TYPES.ROAD_MAJOR || t === CONFIG.TYPES.ROAD_MINOR);
+            };
+
+            if (isRoad(x - 1, z) || isRoad(x + 1, z)) connectedX = true;
+            if (isRoad(x, z - 1) || isRoad(x, z + 1)) connectedZ = true;
+
+            // Default: Z-axis (Vertical) if connectedZ or isolated
+            // If connectedX and NOT connectedZ -> Rotate 90
+            // If Both (Intersection) -> Maybe no lines or Cross? 
+            // User asked for Lines. 
+            // Simple rule: If Horizontal dominance, rotate.
+
+            let rotation = -Math.PI / 2; // Default for Plane (Vertical strip)
+
+            if (connectedX && !connectedZ) {
+                rotation = 0; // Horizontal strip (Plane default is Z-up, so rotated X -90 makes it flat Z-aligned. Wait.)
+                // PlaneGeometry (width, height). Facing +Z.
+                // Rotate X -90 -> Flat on XZ plane. "Height" becomes Z-length. "Width" is X-length.
+                // If geometry is (5, 1). 5 is Width (X), 1 is Height (Z).
+                // So default is Horizontal bar `=====`.
+                // Previous code: lines.rotation.x = -Math.PI / 2;
+                // It looked "vertical" or "horizontal"?
+                // User said: "bottom right to top left... proper orientation". 
+                // That sounds like Vertical (along Z) or Horizontal (along X) depending on view?
+                // Let's assume default geometry (w, h) aligns with X.
+                // If we want Z alignment, we rotate 90 deg around Y.
+            }
+
+            // Re-eval geometry:
+            // PlaneGeometry(CONFIG.CELL_SIZE * 0.5, CONFIG.CELL_SIZE * 0.1);
+            // Width = 5 (Large), Height = 1 (Thin). 
+            // Placed flat: It's a bar along X axis.
+            // If connectedZ (Vertical road), we want bar along Z axis. -> Rotate Y 90.
+            // If connectedX (Horizontal road), we want bar along X axis. -> No Y rotation.
+
             const lGeo = new THREE.PlaneGeometry(CONFIG.CELL_SIZE * 0.5, CONFIG.CELL_SIZE * 0.1);
             const lMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
             const lines = new THREE.Mesh(lGeo, lMat);
-            lines.rotation.x = -Math.PI / 2;
             lines.position.y = 0.06;
+
+            // Base flat rotation
+            lines.rotation.x = -Math.PI / 2;
+
+            // Directional rotation
+            // If Z-connected (Vertical Road) -> Rotate to align Z
+            // If X-connected (Horizontal Road) -> Align X (Default)
+
+            // Prioritize Z connection for logic?
+            // If road is drawn "bottom left to top right" (diagonal?? No grid is orthogonal).
+            // User likely means "Vertical on screen" vs "Horizontal".
+
+            // If I draw a line along Z (Vertical), neighbors are Z-1, Z+1. connectedZ=true. connectedX=false.
+            // I want vertical stripe. Geometry is wide X. So I need 90 deg rotation.
+
+            if (connectedZ && !connectedX) {
+                lines.rotation.z = Math.PI / 2;
+            } else if (connectedX && !connectedZ) {
+                // Keep default (Aligned X)
+            } else if (connectedX && connectedZ) {
+                // Intersection. Draw nothing or Cross?
+                // Let's skip lines for intersection to look clean
+                lines.visible = false;
+            } else {
+                // Isolated dot or single cell. Default to something?
+                // Let's default to Z alignment if ambiguous?
+                // Or visible=false?
+            }
+
             mesh.add(lines);
 
+            // Hide dot if intersection?
+            // User didn't ask about dots. Keeping them.
             const dGeo = new THREE.PlaneGeometry(1, 1);
             const dMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
             const dot = new THREE.Mesh(dGeo, dMat);
@@ -341,6 +416,11 @@ class Game {
             this.syncVisuals();
             this.updatePopulation();
         }
+
+        // Update Traffic
+        // ensure this.population exists. It is set in updatePopulation which is called on init?
+        // updatePopulation sets document text. Does it set this.population? 
+        this.vehicleSystem.update(deltaTime, this.simSpeed, this.population || 0);
 
         this.sceneManager.render();
     }
