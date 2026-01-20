@@ -143,34 +143,34 @@ export const ModelFactory = {
         const cellSize = CONFIG.CELL_SIZE;
 
         // Base/Lower Wing
-        const baseGeo = new THREE.BoxGeometry(cellSize * 0.9, 1.2, cellSize * 0.6);
+        const baseGeo = new THREE.BoxGeometry(cellSize * 0.9, 3.6, cellSize * 0.6);
         const baseMat = new THREE.MeshLambertMaterial({ color: 0xffffff }); // Hospital white
         const base = new THREE.Mesh(baseGeo, baseMat);
-        base.position.y = 0.6;
+        base.position.y = 1.8;
         group.add(base);
 
         // Main Tower
-        const towerGeo = new THREE.BoxGeometry(cellSize * 0.4, 3, cellSize * 0.4);
+        const towerGeo = new THREE.BoxGeometry(cellSize * 0.4, 9, cellSize * 0.4);
         const tower = new THREE.Mesh(towerGeo, baseMat);
-        tower.position.set(-cellSize * 0.2, 1.5, 0);
+        tower.position.set(-cellSize * 0.2, 4.5, 0);
         group.add(tower);
 
         // Helipad
-        const heliGeo = new THREE.CylinderGeometry(cellSize * 0.2, cellSize * 0.2, 0.1, 12);
+        const heliGeo = new THREE.CylinderGeometry(cellSize * 0.2, cellSize * 0.2, 0.3, 12);
         const heliMat = new THREE.MeshLambertMaterial({ color: 0x444444 });
         const helipad = new THREE.Mesh(heliGeo, heliMat);
-        helipad.position.set(cellSize * 0.2, 1.25, 0);
+        helipad.position.set(cellSize * 0.2, 3.75, 0);
         group.add(helipad);
 
         // Red Cross on Tower
-        const crossHGeo = new THREE.BoxGeometry(cellSize * 0.15, cellSize * 0.05, 0.05);
-        const crossVGeo = new THREE.BoxGeometry(cellSize * 0.05, cellSize * 0.15, 0.05);
+        const crossHGeo = new THREE.BoxGeometry(cellSize * 0.15, cellSize * 0.15, 0.05);
+        const crossVGeo = new THREE.BoxGeometry(cellSize * 0.05, cellSize * 0.45, 0.05);
         const crossMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
 
         const cH = new THREE.Mesh(crossHGeo, crossMat);
         const cV = new THREE.Mesh(crossVGeo, crossMat);
-        cH.position.set(-cellSize * 0.2, 2.5, cellSize * 0.2 + 0.01);
-        cV.position.set(-cellSize * 0.2, 2.5, cellSize * 0.2 + 0.01);
+        cH.position.set(-cellSize * 0.2, 7.5, cellSize * 0.2 + 0.01);
+        cV.position.set(-cellSize * 0.2, 7.5, cellSize * 0.2 + 0.01);
         group.add(cH, cV);
 
         return group;
@@ -181,24 +181,24 @@ export const ModelFactory = {
         const cellSize = CONFIG.CELL_SIZE;
 
         // Main Garage Body
-        const mainGeo = new THREE.BoxGeometry(cellSize * 0.9, 1.8, cellSize * 0.7);
+        const mainGeo = new THREE.BoxGeometry(cellSize * 0.9, 5.4, cellSize * 0.7);
         const mainMat = new THREE.MeshLambertMaterial({ color: CONFIG.COLORS.FIRE_STATION });
         const body = new THREE.Mesh(mainGeo, mainMat);
-        body.position.y = 0.9;
+        body.position.y = 2.7;
         group.add(body);
 
         // Hose Tower
-        const towerGeo = new THREE.BoxGeometry(cellSize * 0.25, 3.5, cellSize * 0.25);
+        const towerGeo = new THREE.BoxGeometry(cellSize * 0.25, 10.5, cellSize * 0.25);
         const tower = new THREE.Mesh(towerGeo, mainMat);
-        tower.position.set(cellSize * 0.3, 1.75, cellSize * 0.2);
+        tower.position.set(cellSize * 0.3, 5.25, cellSize * 0.2);
         group.add(tower);
 
         // Garage Doors (3 bays)
-        const doorGeo = new THREE.BoxGeometry(cellSize * 0.2, 1.2, 0.1);
+        const doorGeo = new THREE.BoxGeometry(cellSize * 0.2, 3.6, 0.1);
         const doorMat = new THREE.MeshLambertMaterial({ color: 0x333333 });
         for (let i = -1; i <= 1; i++) {
             const door = new THREE.Mesh(doorGeo, doorMat);
-            door.position.set(i * cellSize * 0.25, 0.6, cellSize * 0.35 + 0.01);
+            door.position.set(i * cellSize * 0.25, 1.8, cellSize * 0.35 + 0.01);
             group.add(door);
         }
 
@@ -213,27 +213,27 @@ export const ModelFactory = {
         const wingMat = new THREE.MeshLambertMaterial({ color: 0xedc9af }); // Sand/Tan
 
         // Back wing
-        const backGeo = new THREE.BoxGeometry(cellSize * 0.8, 1.2, cellSize * 0.2);
+        const backGeo = new THREE.BoxGeometry(cellSize * 0.8, 3.6, cellSize * 0.2);
         const back = new THREE.Mesh(backGeo, wingMat);
-        back.position.set(0, 0.6, -cellSize * 0.3);
+        back.position.set(0, 1.8, -cellSize * 0.3);
         group.add(back);
 
         // Left wing
-        const sideGeo = new THREE.BoxGeometry(cellSize * 0.2, 1.2, cellSize * 0.6);
+        const sideGeo = new THREE.BoxGeometry(cellSize * 0.2, 3.6, cellSize * 0.6);
         const left = new THREE.Mesh(sideGeo, wingMat);
-        left.position.set(-cellSize * 0.3, 0.6, cellSize * 0.1);
+        left.position.set(-cellSize * 0.3, 1.8, cellSize * 0.1);
         group.add(left);
 
         // Right wing
         const right = new THREE.Mesh(sideGeo, wingMat);
-        right.position.set(cellSize * 0.3, 0.6, cellSize * 0.1);
+        right.position.set(cellSize * 0.3, 1.8, cellSize * 0.1);
         group.add(right);
 
         // Small Clock Tower centerpiece
-        const towerGeo = new THREE.BoxGeometry(cellSize * 0.15, 2, cellSize * 0.15);
+        const towerGeo = new THREE.BoxGeometry(cellSize * 0.15, 6, cellSize * 0.15);
         const towerMat = new THREE.MeshLambertMaterial({ color: 0x8b4513 }); // Brown brick
         const tower = new THREE.Mesh(towerGeo, towerMat);
-        tower.position.set(0, 1, -cellSize * 0.3);
+        tower.position.set(0, 3, -cellSize * 0.3);
         group.add(tower);
 
         return group;
