@@ -78,9 +78,40 @@ export class InputManager {
                 icon: '🌳',
                 label: 'Build Park',
                 subTools: [
-                    { id: 'park:2:2', label: 'Large Park (2x2, AoE: 8tiles)', icon: '<img src="assets/park_2x2.png" style="width: 24px; height: 24px;">' },
-                    { id: 'park:1:2', label: 'Medium Park (1x2, AoE: 5tiles)', icon: '<img src="assets/park_1x2.png" style="width: 24px; height: 24px;">' },
-                    { id: 'park:1:1', label: 'Small Park (1x1, AoE: 4tiles)', icon: '<img src="assets/park_1x1.png" style="width: 24px; height: 24px;">' }
+                    {
+                        id: 'park:2:2',
+                        label: 'Large Park',
+                        title: 'Large Park (2x2, AoE: 8 tiles)',
+                        icon: `<svg viewBox="0 0 24 24" style="width:24px; height:24px;">
+                                <rect x="2" y="2" width="20" height="20" rx="4" fill="#4caf50" />
+                                <circle cx="7" cy="7" r="2.5" fill="#1b5e20" />
+                                <circle cx="17" cy="7" r="2.5" fill="#1b5e20" />
+                                <circle cx="7" cy="17" r="2.5" fill="#1b5e20" />
+                                <circle cx="17" cy="17" r="2.5" fill="#1b5e20" />
+                                <rect x="9" y="11" width="6" height="2" rx="0.5" fill="#795548" />
+                               </svg>`
+                    },
+                    {
+                        id: 'park:1:2',
+                        label: 'Medium Park',
+                        title: 'Medium Park (1x2, AoE: 5 tiles)',
+                        icon: `<svg viewBox="0 0 24 24" style="width:24px; height:24px;">
+                                <rect x="6" y="2" width="12" height="20" rx="2" fill="#4caf50" />
+                                <circle cx="12" cy="7" r="2.5" fill="#1b5e20" />
+                                <circle cx="12" cy="17" r="2.5" fill="#1b5e20" />
+                                <rect x="9" y="11" width="6" height="1.5" rx="0.5" fill="#795548" />
+                               </svg>`
+                    },
+                    {
+                        id: 'park:1:1',
+                        label: 'Small Park',
+                        title: 'Small Park (1x1, AoE: 4 tiles)',
+                        icon: `<svg viewBox="0 0 24 24" style="width:24px; height:24px;">
+                                <rect x="4" y="4" width="16" height="16" rx="4" fill="#4caf50" />
+                                <circle cx="12" cy="10" r="3" fill="#1b5e20" />
+                                <rect x="11" y="15" width="2" height="3" fill="#5d4037" />
+                               </svg>`
+                    }
                 ]
             },
             { id: 'school', icon: '🏫', label: 'Build School' },
@@ -113,7 +144,7 @@ export class InputManager {
                     const subBtn = document.createElement('button');
                     subBtn.className = 'sub-tool-btn';
                     subBtn.innerHTML = sub.icon;
-                    subBtn.title = sub.label;
+                    subBtn.title = sub.title || sub.label;
                     if (this.activeTool === sub.id) subBtn.classList.add('active');
 
                     subBtn.onclick = (e) => {
