@@ -16,12 +16,23 @@
     background: #333;
     color: white;
     border: 1px solid #555;
-    padding: 8px 16px;
-    border-radius: 4px;
+    padding: 10px 15px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.2s;
-    font-size: 14px;
-    font-weight: 600;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 24px;
+    line-height: 1;
+    min-width: 50px;
+    text-align: center;
+    position: relative;
+    /* For tooltip? Browsers handle title attr automatically but we can do custom later if needed */
+}
+
+.tool-btn:hover {
+    background: #444;
+    transform: translateY(-2px) scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    z-index: 10;
 }
 
 .tool-btn:hover {

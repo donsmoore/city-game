@@ -149,12 +149,6 @@ class Game {
                         this.grid.metadata[this.grid.getIndex(x, z)] = { type: 'road_major' };
                         changed = true;
                     }
-                } else if (tool === 'road_minor') {
-                    if (currentType !== CONFIG.TYPES.ROAD_MINOR && currentType !== CONFIG.TYPES.ROAD_MAJOR) {
-                        this.grid.setCell(x, z, CONFIG.TYPES.ROAD_MINOR);
-                        this.grid.metadata[this.grid.getIndex(x, z)] = { type: 'road_minor' };
-                        changed = true;
-                    }
                 } else if (tool === 'park') {
                     if (currentType !== CONFIG.TYPES.PARK && currentType !== CONFIG.TYPES.ROAD_MAJOR) {
                         this.grid.setCell(x, z, CONFIG.TYPES.PARK);

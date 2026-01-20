@@ -48,11 +48,10 @@ export class InputManager {
 
     setupToolbar() {
         const tools = [
-            { id: 'road_major', label: 'Major Road' },
-            { id: 'road_minor', label: 'Minor Road' },
-            { id: 'park', label: 'Park' },
-            { id: 'school', label: 'School' },
-            { id: 'delete', label: 'Bulldoze' }
+            { id: 'road_major', icon: '🛣️', label: 'Build Road' },
+            { id: 'park', icon: '🌳', label: 'Build Park' },
+            { id: 'school', icon: '🏫', label: 'Build School' },
+            { id: 'delete', icon: '🚜', label: 'Bulldoze' }
         ];
 
         const toolbar = document.getElementById('toolbar');
@@ -62,7 +61,9 @@ export class InputManager {
             const btn = document.createElement('button');
             btn.className = 'tool-btn';
             if (tool.id === this.activeTool) btn.classList.add('active');
-            btn.innerText = tool.label;
+            btn.innerText = tool.icon;
+            btn.title = tool.label; // Native tooltip
+
             btn.onclick = () => {
                 this.activeTool = tool.id;
                 document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
