@@ -112,7 +112,7 @@ export class InputManager {
                 tool.subTools.forEach(sub => {
                     const subBtn = document.createElement('button');
                     subBtn.className = 'sub-tool-btn';
-                    subBtn.innerText = sub.icon;
+                    subBtn.innerHTML = sub.icon;
                     subBtn.title = sub.label;
                     if (this.activeTool === sub.id) subBtn.classList.add('active');
 
