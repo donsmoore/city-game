@@ -149,10 +149,43 @@ class Game {
                         this.grid.metadata[this.grid.getIndex(x, z)] = { type: 'road_major' };
                         changed = true;
                     }
-                } else if (tool === 'park') {
-                    if (currentType !== CONFIG.TYPES.PARK && currentType !== CONFIG.TYPES.ROAD_MAJOR) {
-                        this.grid.setCell(x, z, CONFIG.TYPES.PARK);
-                        this.grid.metadata[this.grid.getIndex(x, z)] = { type: 'park' };
+                } else if (tool.startsWith('park')) {
+                    // Multi-tile handling
+                    let w = 1, d = 1;
+                    const parts = tool.split(':');
+                    if (parts.length === 3) {
+                        w = parseInt(parts[1]);
+                        d = parseInt(parts[2]);
+                    }
+
+                    // Check if whole footprint is valid
+                    let canPlace = true;
+                    for (let px = 0; px < w; px++) {
+                        for (let pz = 0; pz < d; pz++) {
+                            const tx = x + px;
+                            const tz = z + pz;
+                            if (tx >= this.grid.width || tz >= this.grid.height) { canPlace = false; break; }
+                            const t = this.grid.getCell(tx, tz);
+                            if (t !== CONFIG.TYPES.EMPTY && t !== CONFIG.TYPES.LOT) { canPlace = false; break; }
+                        }
+                        if (!canPlace) break;
+                    }
+
+                    if (canPlace) {
+                        for (let px = 0; px < w; px++) {
+                            for (let pz = 0; pz < d; pz++) {
+                                const tx = x + px;
+                                const tz = z + pz;
+                                const isPivot = (px === 0 && pz === 0);
+                                this.grid.setCell(tx, tz, CONFIG.TYPES.PARK);
+                                this.grid.metadata[this.grid.getIndex(tx, tz)] = {
+                                    type: 'park',
+                                    width: w,
+                                    depth: d,
+                                    isPivot: isPivot
+                                };
+                            }
+                        }
                         changed = true;
                     }
                 } else if (tool === 'school') {
@@ -373,7 +406,10 @@ class Game {
             mesh = new THREE.Mesh(geometry, material);
             mesh.rotation.x = -Math.PI / 2;
         } else if (type === CONFIG.TYPES.PARK) {
-            mesh = ModelFactory.createParkMesh();
+            if (meta && !meta.isPivot) return; // Only pivot cells render the mesh
+            const w = (meta && meta.width) ? meta.width : 1;
+            const d = (meta && meta.depth) ? meta.depth : 1;
+            mesh = ModelFactory.createParkMesh(w, d);
         } else if (type === CONFIG.TYPES.SCHOOL) {
             mesh = ModelFactory.createSchoolMesh();
         } else if (type === CONFIG.TYPES.HOSPITAL) {

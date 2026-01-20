@@ -239,36 +239,51 @@ export const ModelFactory = {
         return group;
     },
 
-    createParkMesh: () => {
+    createParkMesh: (width = 1, depth = 1) => {
         const group = new THREE.Group();
         const cellSize = CONFIG.CELL_SIZE;
 
-        // Base Grass Patch
-        const gGeo = new THREE.CylinderGeometry(cellSize * 0.45, cellSize * 0.45, 0.4, 16);
-        const gMat = new THREE.MeshLambertMaterial({ color: 0x2d4c1e });
-        const base = new THREE.Mesh(gGeo, gMat);
+        // Base Grass Patch (Rectangular or Circular depending on size)
+        const w = width * cellSize * 0.95;
+        const d = depth * cellSize * 0.95;
+
+        let base;
+        if (width === 1 && depth === 1) {
+            const gGeo = new THREE.CylinderGeometry(cellSize * 0.45, cellSize * 0.45, 0.4, 16);
+            const gMat = new THREE.MeshLambertMaterial({ color: 0x2d4c1e });
+            base = new THREE.Mesh(gGeo, gMat);
+        } else {
+            const gGeo = new THREE.BoxGeometry(w, 0.4, d);
+            const gMat = new THREE.MeshLambertMaterial({ color: 0x2d4c1e });
+            base = new THREE.Mesh(gGeo, gMat);
+        }
         base.position.y = 0.2;
         group.add(base);
 
-        // Pathway (Grey strip)
-        const pGeo = new THREE.BoxGeometry(cellSize * 0.9, 0.1, cellSize * 0.15);
+        // Pathway (Gravel strip)
+        const isWide = width > depth;
+        const pGeo = new THREE.BoxGeometry(
+            isWide ? w : cellSize * 0.2,
+            0.1,
+            isWide ? cellSize * 0.2 : d
+        );
         const pMat = new THREE.MeshLambertMaterial({ color: 0x777777 });
         const path = new THREE.Mesh(pGeo, pMat);
         path.position.y = 0.41;
         group.add(path);
 
-        // Trees (3 of them, different spots and heights)
+        // Trees
+        const area = width * depth;
+        const treeCount = Math.floor(2 + area * 1.5);
+
         const treeCreator = (x, z, scale) => {
             const tree = new THREE.Group();
-
-            // Trunk (Scaled 300%)
             const trunkGeo = new THREE.CylinderGeometry(cellSize * 0.05, cellSize * 0.05, 1.5 * 3 * scale, 6);
             const trunkMat = new THREE.MeshLambertMaterial({ color: 0x5c4033 });
             const trunk = new THREE.Mesh(trunkGeo, trunkMat);
             trunk.position.y = (1.5 * 3 * scale) / 2;
             tree.add(trunk);
 
-            // Leaves (Scaled 300%)
             const leafGeo = new THREE.ConeGeometry(cellSize * 0.3, 2 * 3 * scale, 8);
             const leafMat = new THREE.MeshLambertMaterial({ color: 0x1e5927 });
             const leaves = new THREE.Mesh(leafGeo, leafMat);
@@ -279,32 +294,45 @@ export const ModelFactory = {
             return tree;
         };
 
-        group.add(treeCreator(-cellSize * 0.25, -cellSize * 0.15, 0.8));
-        group.add(treeCreator(cellSize * 0.2, cellSize * 0.2, 1.0));
-        group.add(treeCreator(-cellSize * 0.1, cellSize * 0.25, 0.6));
+        for (let i = 0; i < treeCount; i++) {
+            const tx = (Math.random() - 0.5) * w * 0.8;
+            const tz = (Math.random() - 0.5) * d * 0.8;
+            if (isWide && Math.abs(tz) < cellSize * 0.15) continue;
+            if (!isWide && Math.abs(tx) < cellSize * 0.15) continue;
+            group.add(treeCreator(tx, tz, 0.6 + Math.random() * 0.5));
+        }
 
-        // Bench
-        const benchGroup = new THREE.Group();
-        const woodMat = new THREE.MeshLambertMaterial({ color: 0x8b4513 });
+        // Benches
+        const benchCount = Math.floor(area);
+        for (let i = 0; i < benchCount; i++) {
+            const benchGroup = new THREE.Group();
+            const woodMat = new THREE.MeshLambertMaterial({ color: 0x8b4513 });
+            const seatGeo = new THREE.BoxGeometry(1.5, 0.2, 0.6);
+            const seat = new THREE.Mesh(seatGeo, woodMat);
+            seat.position.y = 0.5;
+            benchGroup.add(seat);
 
-        // Seat
-        const seatGeo = new THREE.BoxGeometry(1.5, 0.2, 0.6);
-        const seat = new THREE.Mesh(seatGeo, woodMat);
-        seat.position.y = 0.5;
-        benchGroup.add(seat);
+            const legGeo = new THREE.BoxGeometry(0.1, 0.5, 0.1);
+            const leg1 = new THREE.Mesh(legGeo, woodMat);
+            leg1.position.set(-0.6, 0.25, 0.2);
+            benchGroup.add(leg1);
+            const leg2 = leg1.clone();
+            leg2.position.set(0.6, 0.25, 0.2);
+            benchGroup.add(leg2);
 
-        // Legs
-        const legGeo = new THREE.BoxGeometry(0.1, 0.5, 0.1);
-        const leg1 = new THREE.Mesh(legGeo, woodMat);
-        leg1.position.set(-0.6, 0.25, 0.2);
-        benchGroup.add(leg1);
-        const leg2 = leg1.clone();
-        leg2.position.set(0.6, 0.25, 0.2);
-        benchGroup.add(leg2);
+            const side = Math.random() > 0.5 ? 1 : -1;
+            const bx = isWide ? (Math.random() - 0.5) * w * 0.7 : (w / 2 - 1) * side;
+            const bz = isWide ? (d / 2 - 1) * side : (Math.random() - 0.5) * d * 0.7;
 
-        benchGroup.position.set(cellSize * 0.1, 0.4, -cellSize * 0.2);
-        benchGroup.rotation.y = Math.PI / 4;
-        group.add(benchGroup);
+            benchGroup.position.set(bx, 0.4, bz);
+            benchGroup.rotation.y = Math.random() * Math.PI * 2;
+            group.add(benchGroup);
+        }
+
+        if (width > 1 || depth > 1) {
+            group.translateX((width - 1) * cellSize / 2);
+            group.translateZ((depth - 1) * cellSize / 2);
+        }
 
         return group;
     },

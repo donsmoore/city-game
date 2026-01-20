@@ -49,11 +49,20 @@ export class InputManager {
     setupToolbar() {
         const tools = [
             { id: 'road_major', icon: '<div class="icon-road"></div>', label: 'Build Road' },
-            { id: 'park', icon: '🌳', label: 'Build Park' },
+            {
+                id: 'park',
+                icon: '🌳',
+                label: 'Build Park',
+                subTools: [
+                    { id: 'park:1:1', label: '1x1 Park', icon: '1x1' },
+                    { id: 'park:1:2', label: '1x2 Park', icon: '1x2' },
+                    { id: 'park:2:2', label: '2x2 Park', icon: '2x2' }
+                ]
+            },
             { id: 'school', icon: '🏫', label: 'Build School' },
             { id: 'hospital', icon: '🏥', label: 'Build Hospital' },
             { id: 'fire_station', icon: '🚒', label: 'Build Fire Station' },
-            { id: 'delete', icon: '<img src="assets/bulldozer.png?v=' + Date.now() + '" style="width: 24px; height: 24px; object-fit: contain;">', label: 'Bulldoze', className: 'btn-delete' }
+            { id: 'delete', icon: `<img src="assets/bulldozer.png?v=${Date.now()}" style="width: 24px; height: 24px; object-fit: contain;">`, label: 'Bulldoze', className: 'btn-delete' }
         ];
 
         const toolbar = document.getElementById('toolbar');
@@ -63,13 +72,54 @@ export class InputManager {
             const btn = document.createElement('button');
             btn.className = 'tool-btn';
             if (tool.className) btn.classList.add(tool.className);
-            if (tool.id === this.activeTool) btn.classList.add('active');
+
+            // Set initial active state correctly for sub-tools
+            const isActive = this.activeTool === tool.id || (this.activeTool.startsWith(tool.id + ':'));
+            if (isActive) btn.classList.add('active');
 
             btn.innerHTML = tool.icon;
             btn.title = tool.label;
 
+            // Handle Sub-tools
+            if (tool.subTools) {
+                const subMenu = document.createElement('div');
+                subMenu.className = 'sub-tool-container';
+
+                tool.subTools.forEach(sub => {
+                    const subBtn = document.createElement('button');
+                    subBtn.className = 'sub-tool-btn';
+                    subBtn.innerText = sub.icon;
+                    subBtn.title = sub.label;
+                    if (this.activeTool === sub.id) subBtn.classList.add('active');
+
+                    subBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        this.activeTool = sub.id;
+                        document.querySelectorAll('.tool-btn, .sub-tool-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        subBtn.classList.add('active');
+                        // Update main icon to show selection?
+                        // btn.innerHTML = tool.icon + `<span style="font-size: 10px; position: absolute; bottom: 2px; right: 2px;">${sub.icon}</span>`;
+                        subMenu.classList.remove('active');
+                    };
+                    subMenu.appendChild(subBtn);
+                });
+                btn.appendChild(subMenu);
+
+                btn.onmouseenter = () => subMenu.classList.add('active');
+                btn.onmouseleave = () => subMenu.classList.remove('active');
+            }
+
             btn.onclick = () => {
-                this.activeTool = tool.id;
+                if (tool.subTools) {
+                    // If it has sub-tools, clicking main button just selects the tool (default sub-tool if none active)
+                    if (!this.activeTool.startsWith(tool.id + ':')) {
+                        this.activeTool = tool.subTools[0].id; // Default to first
+                    }
+                } else {
+                    this.activeTool = tool.id;
+                }
+
                 document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
             };

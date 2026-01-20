@@ -66,10 +66,6 @@
 }
 
 /* Yellow Bulldozer Style */
-.btn-delete {
-    /* Optional specific styling for delete button container */
-}
-
 #info-overlay {
     position: absolute;
     bottom: 20px;
@@ -127,4 +123,57 @@
     font-weight: bold;
     border: 1px solid rgba(255, 255, 255, 0.2);
     font-family: monospace;
+}
+
+/* Sub-tool Flyouts */
+.sub-tool-container {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    padding: 8px;
+    border-radius: 10px;
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.tool-btn:hover .sub-tool-container,
+.sub-tool-container.active {
+    display: flex;
+}
+
+.sub-tool-btn {
+    width: 60px;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sub-tool-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.sub-tool-btn.active {
+    background: #4a90e2;
+    border-color: #2171c7;
+}
+
+.tool-btn .sub-tool-container {
+    pointer-events: auto;
 }
