@@ -18,8 +18,6 @@ export class InputManager {
     }
 
     setupEventListeners() {
-        // Use window for mouse events to track off-canvas dragging
-        // Mousedown must be on canvas to start
         const canvas = this.sceneManager.renderer.domElement;
 
         canvas.addEventListener('mousedown', (e) => {
@@ -74,6 +72,13 @@ export class InputManager {
         });
     }
 
+    log(msg) {
+        // Remote logger
+        const formData = new FormData();
+        formData.append('msg', msg);
+        fetch('log.php', { method: 'POST', body: formData }).catch(() => { });
+    }
+
     gridToWorld(gx, gz) {
         const offset = (CONFIG.GRID_SIZE * CONFIG.CELL_SIZE) / 2;
         const x = (gx * CONFIG.CELL_SIZE) - offset + (CONFIG.CELL_SIZE / 2);
@@ -90,15 +95,14 @@ export class InputManager {
 
     handleInput(event, isCommit) {
         let gridPos = null;
+        let debugSource = "None";
 
         // 1. Try standard Raycast (objects)
-        // Note: raycast expects client coords relative to window if using full screen renderer logic?
-        // SceneManager.raycast usually uses normalized device coords.
-        // Assuming SceneManager handles the clientX/Y conversion to NDC internally or accepts raw client.
         const target = this.sceneManager.raycast(event.clientX, event.clientY);
 
         if (target) {
             gridPos = this.worldToGrid(target.x, target.z);
+            debugSource = "Raycast";
         } else {
             // 2. Fallback: Plane Intersection (Y=0) for dragging off-screen
             const raycaster = new THREE.Raycaster();
@@ -112,13 +116,19 @@ export class InputManager {
 
             if (raycaster.ray.intersectPlane(plane, hit)) {
                 gridPos = this.worldToGrid(hit.x, hit.z);
+                debugSource = "Plane";
             }
         }
 
         // 3. Fallback: Sticky Edge (Last known valid)
-        // If we still have no gridPos (aiming at sky and missing plane?), use last valid.
         if (!gridPos && this.isMouseDown && this.lastValidGrid) {
             gridPos = { ...this.lastValidGrid };
+            debugSource = "Sticky";
+        }
+
+        if (this.isMouseDown) {
+            // Low-frequency log to capture dragging state
+            //  this.log(`Source: ${debugSource} | Grid: ${gridPos ? gridPos.x + ',' + gridPos.z : 'NULL'}`);
         }
 
         if (!gridPos) return;
@@ -132,7 +142,7 @@ export class InputManager {
             this.lastValidGrid = { ...gridPos };
         }
 
-        // Final Bounds check (redundant after clamp but good for sanity)
+        // Final Bounds check
         if (gridPos.x < 0 || gridPos.x >= CONFIG.GRID_SIZE || gridPos.z < 0 || gridPos.z >= CONFIG.GRID_SIZE) return;
 
         // Straight Line Constraint for Roads
@@ -158,6 +168,7 @@ export class InputManager {
             end = gridPos;
 
             if (isCommit) {
+                this.log(`COMMIT Road: Start(${start.x},${start.z}) End(${end.x},${end.z}) Source:${debugSource}`);
                 this.onAction(this.activeTool, start, end);
             } else {
                 this.onPreview(this.activeTool, start, end);
@@ -189,11 +200,6 @@ export class InputManager {
             gridPos = this.worldToGrid(target.x, target.z);
             visible = true;
         }
-
-        // Show cursor if valid target. If off-screen, maybe hide?
-        // Or show on edge? 
-        // Let's hide if off-map to avoid confusion, but show if dragging.
-        // Actually, let's keep it simple: Show if Ray hit something valid.
 
         if (visible) {
             if (gridPos.x < 0 || gridPos.x >= CONFIG.GRID_SIZE || gridPos.z < 0 || gridPos.z >= CONFIG.GRID_SIZE) {
