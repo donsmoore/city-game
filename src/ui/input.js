@@ -80,8 +80,8 @@ export class InputManager {
                 subTools: [
                     {
                         id: 'park:2:2',
-                        label: 'Large Park',
-                        title: 'Large Park (2x2, AoE: 8 tiles)',
+                        label: '4x4 Large Park',
+                        title: '4x4 Large Park',
                         icon: `<svg viewBox="0 0 24 24" style="width:24px; height:24px;">
                                 <rect x="2" y="2" width="20" height="20" rx="4" fill="#4caf50" />
                                 <circle cx="7" cy="7" r="2.5" fill="#1b5e20" />
@@ -93,8 +93,8 @@ export class InputManager {
                     },
                     {
                         id: 'park:1:2',
-                        label: 'Medium Park',
-                        title: 'Medium Park (1x2, AoE: 5 tiles)',
+                        label: '2x1 Medium Park',
+                        title: '2x1 Medium Park',
                         icon: `<svg viewBox="0 0 24 24" style="width:24px; height:24px;">
                                 <rect x="6" y="2" width="12" height="20" rx="2" fill="#4caf50" />
                                 <circle cx="12" cy="7" r="2.5" fill="#1b5e20" />
@@ -104,8 +104,8 @@ export class InputManager {
                     },
                     {
                         id: 'park:1:1',
-                        label: 'Small Park',
-                        title: 'Small Park (1x1, AoE: 4 tiles)',
+                        label: '1x1 Small Park',
+                        title: '1x1 Small Park',
                         icon: `<svg viewBox="0 0 24 24" style="width:24px; height:24px;">
                                 <rect x="4" y="4" width="16" height="16" rx="4" fill="#4caf50" />
                                 <circle cx="12" cy="10" r="3" fill="#1b5e20" />
