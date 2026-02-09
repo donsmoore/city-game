@@ -6,6 +6,7 @@ import { SimulationManager } from './simulation/sim.js';
 import { GrowthSystem } from './simulation/growth.js';
 import { VehicleSystem } from './simulation/vehicles.js';
 import { ModelFactory } from './render/models.js';
+import { disposeObject } from './render/utils.js';
 import { CONFIG } from './config.js';
 import * as THREE from 'three';
 
@@ -31,6 +32,7 @@ class Game {
         this.simSpeed = 1;
         this.years = 1;
         this.days = 1;
+        this.population = 0;
         this.dayAccumulator = 0;
         this.DAY_LENGTH = 1000; // 1 second per day at 1x speed
 
@@ -79,20 +81,26 @@ class Game {
         for (let i = 0; i < this.grid.cells.length; i++) {
             if (this.grid.cells[i] === CONFIG.TYPES.BUILDING) {
                 const meta = this.grid.metadata[i];
-                if (meta) { // Root only
+                if (meta && meta.isPivot) { // Root only
                     // Height 1 = ~10 people. Height 5 = ~50 people per cell
                     // But larger lots = more people.
-                    // Simply: height * 50
-                    pop += Math.floor(meta.height * 50);
+                    // Simply: height * 50 * (width * depth)
+                    const w = meta.width || 1;
+                    const d = meta.depth || 1;
+                    pop += Math.floor(meta.height * 50 * w * d);
                 }
             }
         }
+        this.population = pop;
         document.getElementById('pop-display').innerText = `Pop: ${pop}`;
     }
 
     handlePreview(tool, start, end) {
         // Clear previous previews
-        this.previewMeshes.forEach(mesh => this.sceneManager.scene.remove(mesh));
+        this.previewMeshes.forEach(mesh => {
+            disposeObject(mesh);
+            this.sceneManager.scene.remove(mesh);
+        });
         this.previewMeshes = [];
 
         if (!tool || !start || !end) return;
@@ -237,11 +245,21 @@ class Game {
         }
 
         if (changed) {
-            // Update visuals for the placed/removed cell immediately?
-            // Or wait for sim update? 
-            // Better to trigger Sim update which might change MANY cells.
             this.simManager.updateTopology();
-            this.syncVisuals();
+
+            // Optimization: instead of full sync, we could update only range + neighbors
+            // For now, full sync is okay but let's at least ensure neighbors of roads are updated
+            if (tool === 'road_major' || tool === 'delete') {
+                for (let x = xMin - 1; x <= xMax + 1; x++) {
+                    for (let z = zMin - 1; z <= zMax + 1; z++) {
+                        if (x >= 0 && x < this.grid.width && z >= 0 && z < this.grid.height) {
+                            this.updateCellVisual(x, z);
+                        }
+                    }
+                }
+            } else {
+                this.syncVisuals();
+            }
         }
     }
 
@@ -264,172 +282,70 @@ class Game {
         const index = this.grid.getIndex(x, z);
         const meta = this.grid.metadata[index];
 
-        // Check compatibility
-        if (existing) {
-            if (existing.userData.type === type) {
-                // Additional checks for buildings
-                if (type === CONFIG.TYPES.BUILDING) {
-                    if (meta && existing.userData.height === meta.height && existing.userData.subtype === meta.subtype) {
-                        return; // No change needed
-                    }
-                } else if (type === CONFIG.TYPES.ROAD_MAJOR || type === CONFIG.TYPES.ROAD_MINOR) {
-                    // Roads always need re-evaluation because neighbors might have changed
-                    // Fall through to removal and re-creation
-                } else {
-                    return; // No change needed for other static types
-                }
+        // Optimization: Handle early exits for unchanged meshes
+        if (existing && existing.userData.type === type) {
+            if (type === CONFIG.TYPES.BUILDING) {
+                if (meta && existing.userData.height === meta.height) return;
+            } else if (type === CONFIG.TYPES.ROAD_MAJOR || type === CONFIG.TYPES.ROAD_MINOR) {
+                // FALL THROUGH: specialized road logic below handles cx/cz check
+            } else {
+                return; // Static type (Parks, Hospital, etc)
             }
-            // If mismatch, remove existing
+        }
+
+        // If types differ, we MUST dispose before proceeding
+        if (existing && existing.userData.type !== type) {
+            disposeObject(existing);
             this.sceneManager.scene.remove(existing);
             this.cellMeshes.delete(key);
         }
 
-        // If Empty, we are done
         if (type === CONFIG.TYPES.EMPTY) return;
 
         let mesh;
+        let cx, cz;
 
         if (type === CONFIG.TYPES.BUILDING) {
-            if (meta && meta.isPivot !== false) {
-                // It is a root cell
-                let w = 1, d = 1;
-                if (meta.cells) {
-                    // Calculate w/d from cells bounding box
-                    const xs = meta.cells.map(c => c.x);
-                    const zs = meta.cells.map(c => c.z);
-                    w = Math.max(...xs) - Math.min(...xs) + 1;
-                    d = Math.max(...zs) - Math.min(...zs) + 1;
-                }
-
+            if (meta && meta.isPivot) {
+                let w = meta.width || 1;
+                let d = meta.depth || 1;
                 mesh = ModelFactory.createBuildingMesh(meta, w, d);
-
-                // Position correction
-                // Pivot is usually center of first cell? No, usually corner or center relative to 0,0.
-                // We shift it later.
-
+                // Center for multi-tile
                 if (w > 1 || d > 1) {
-                    // Center the mesh in the multi-cell area
-                    // Base position is center of cell (x,z)
-                    // Box is size w*10, d*10.
-                    // We need to shift by (w-1)*5, (d-1)*5
                     mesh.translateX((w - 1) * CONFIG.CELL_SIZE / 2);
                     mesh.translateZ((d - 1) * CONFIG.CELL_SIZE / 2);
                 }
-            } else {
-                return;
-            }
+            } else return;
         } else if (type === CONFIG.TYPES.ROAD_MAJOR || type === CONFIG.TYPES.ROAD_MINOR) {
-            // ... (Road creation logic same as before, abbreviated here if not changing)
-            // Re-copying full logic to ensure safety
-            mesh = new THREE.Group();
-            let h = 0.1;
-            const geometry = new THREE.BoxGeometry(CONFIG.CELL_SIZE, h, CONFIG.CELL_SIZE);
-            const material = new THREE.MeshLambertMaterial({ color: 0x111111 });
-            const road = new THREE.Mesh(geometry, material);
-            mesh.add(road);
-
-            // Determine Orientation checking neighbors
-            let connectedX = false;
-            let connectedZ = false;
-
-            // Helper to check if neighbor is road
             const isRoad = (nx, nz) => {
-                if (nx < 0 || nx >= this.grid.width || nz < 0 || nz >= this.grid.height) return false;
                 const t = this.grid.getCell(nx, nz);
                 return (t === CONFIG.TYPES.ROAD_MAJOR || t === CONFIG.TYPES.ROAD_MINOR);
             };
+            cx = isRoad(x - 1, z) || isRoad(x + 1, z);
+            cz = isRoad(x, z - 1) || isRoad(x, z + 1);
 
-            if (isRoad(x - 1, z) || isRoad(x + 1, z)) connectedX = true;
-            if (isRoad(x, z - 1) || isRoad(x, z + 1)) connectedZ = true;
-
-            // Default: Z-axis (Vertical) if connectedZ or isolated
-            // If connectedX and NOT connectedZ -> Rotate 90
-            // If Both (Intersection) -> Maybe no lines or Cross? 
-            // User asked for Lines. 
-            // Simple rule: If Horizontal dominance, rotate.
-
-            let rotation = -Math.PI / 2; // Default for Plane (Vertical strip)
-
-            if (connectedX && !connectedZ) {
-                rotation = 0; // Horizontal strip (Plane default is Z-up, so rotated X -90 makes it flat Z-aligned. Wait.)
-                // PlaneGeometry (width, height). Facing +Z.
-                // Rotate X -90 -> Flat on XZ plane. "Height" becomes Z-length. "Width" is X-length.
-                // If geometry is (5, 1). 5 is Width (X), 1 is Height (Z).
-                // So default is Horizontal bar `=====`.
-                // Previous code: lines.rotation.x = -Math.PI / 2;
-                // It looked "vertical" or "horizontal"?
-                // User said: "bottom right to top left... proper orientation". 
-                // That sounds like Vertical (along Z) or Horizontal (along X) depending on view?
-                // Let's assume default geometry (w, h) aligns with X.
-                // If we want Z alignment, we rotate 90 deg around Y.
+            // Optimization: Skip if same connectivity
+            if (existing && existing.userData.type === type &&
+                existing.userData.cx === cx && existing.userData.cz === cz) {
+                return;
             }
 
-            // Re-eval geometry:
-            // PlaneGeometry(CONFIG.CELL_SIZE * 0.5, CONFIG.CELL_SIZE * 0.1);
-            // Width = 5 (Large), Height = 1 (Thin). 
-            // Placed flat: It's a bar along X axis.
-            // If connectedZ (Vertical road), we want bar along Z axis. -> Rotate Y 90.
-            // If connectedX (Horizontal road), we want bar along X axis. -> No Y rotation.
-
-            const lGeo = new THREE.PlaneGeometry(CONFIG.CELL_SIZE * 0.5, CONFIG.CELL_SIZE * 0.1);
-            const lMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            const lines = new THREE.Mesh(lGeo, lMat);
-            lines.position.y = 0.06;
-
-            // Base flat rotation
-            lines.rotation.x = -Math.PI / 2;
-
-            // Directional rotation
-            // If Z-connected (Vertical Road) -> Rotate to align Z
-            // If X-connected (Horizontal Road) -> Align X (Default)
-
-            // Prioritize Z connection for logic?
-            // If road is drawn "bottom left to top right" (diagonal?? No grid is orthogonal).
-            // User likely means "Vertical on screen" vs "Horizontal".
-
-            // If I draw a line along Z (Vertical), neighbors are Z-1, Z+1. connectedZ=true. connectedX=false.
-            // I want vertical stripe. Geometry is wide X. So I need 90 deg rotation.
-
-            if (connectedZ && !connectedX) {
-                lines.rotation.z = Math.PI / 2;
-            } else if (connectedX && !connectedZ) {
-                // Keep default (Aligned X)
-            } else if (connectedX && connectedZ) {
-                // Intersection. Draw nothing or Cross?
-                // Let's skip lines for intersection to look clean
-                lines.visible = false;
-            } else {
-                // Isolated dot or single cell. Default to something?
-                // Let's default to Z alignment if ambiguous?
-                // Or visible=false?
+            if (existing) {
+                disposeObject(existing);
+                this.sceneManager.scene.remove(existing);
+                this.cellMeshes.delete(key);
             }
 
-            mesh.add(lines);
-
-            // Hide dot if intersection?
-            // User didn't ask about dots, but asked for black squares at intersections.
-            const dGeo = new THREE.PlaneGeometry(1, 1);
-            const dMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            const dot = new THREE.Mesh(dGeo, dMat);
-            dot.rotation.x = -Math.PI / 2;
-            dot.position.y = 0.06;
-
-            if (connectedX && connectedZ) {
-                dot.visible = false;
-            }
-
-            mesh.add(dot);
-
+            mesh = ModelFactory.createRoadMesh(type, cx, cz);
         } else if (type === CONFIG.TYPES.LOT) {
             const geometry = new THREE.PlaneGeometry(CONFIG.CELL_SIZE, CONFIG.CELL_SIZE);
             const material = new THREE.MeshLambertMaterial({ color: CONFIG.COLORS.LOT_GRASS });
             mesh = new THREE.Mesh(geometry, material);
             mesh.rotation.x = -Math.PI / 2;
         } else if (type === CONFIG.TYPES.PARK) {
-            if (meta && !meta.isPivot) return; // Only pivot cells render the mesh
-            const w = (meta && meta.width) ? meta.width : 1;
-            const d = (meta && meta.depth) ? meta.depth : 1;
-            mesh = ModelFactory.createParkMesh(w, d);
+            if (meta && meta.isPivot) {
+                mesh = ModelFactory.createParkMesh(meta.width || 1, meta.depth || 1);
+            } else return;
         } else if (type === CONFIG.TYPES.SCHOOL) {
             mesh = ModelFactory.createSchoolMesh();
         } else if (type === CONFIG.TYPES.HOSPITAL) {
@@ -439,19 +355,27 @@ class Game {
         }
 
         if (mesh) {
-            // Tag mesh with data for future checks
-            mesh.userData = { type: type };
-            if (meta) {
-                mesh.userData.height = meta.height;
-                mesh.userData.subtype = meta.subtype;
-            }
-
+            mesh.userData = {
+                type: type,
+                height: meta ? meta.height : 0,
+                cx: cx,
+                cz: cz
+            };
             const worldPos = this.inputManager.gridToWorld(x, z);
             mesh.position.x += worldPos.x;
             mesh.position.z += worldPos.z;
 
-            if (mesh.geometry && mesh.geometry.type === 'PlaneGeometry') mesh.position.y = 0.05;
-            else if (type !== CONFIG.TYPES.BUILDING) mesh.position.y = 0.05;
+            // Adjust height for non-building meshes to sit slightly above ground
+            if (type !== CONFIG.TYPES.BUILDING) {
+                if (mesh.isGroup) {
+                    // Groups don't have position.y adjustment the same way always, but 0.05 is safe for base
+                    mesh.position.y = 0; // Use object's internal offsets
+                } else {
+                    mesh.position.y = 0.05;
+                }
+            } else {
+                mesh.position.y = 0;
+            }
 
             this.sceneManager.scene.add(mesh);
             this.cellMeshes.set(key, mesh);

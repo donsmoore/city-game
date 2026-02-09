@@ -163,7 +163,7 @@ export class GrowthSystem {
 
         const buildingMeta = {
             type: CONFIG.TYPES.BUILDING,
-            subtype: 'residential',
+            subtype: (type === CONFIG.TYPES.BUILDING_RESIDENTIAL) ? 'residential' : 'commercial',
             height: 1,
             cells: cells,
             color: color

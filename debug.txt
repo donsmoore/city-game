@@ -1,52 +1,67 @@
-DEBUG LOG
-timestamp: 2026-01-20
-issue: Road drawing failure off-canvas
-
-1. Checked Event Listeners:
-   - Moved mousemove/mouseup to window. correct.
-
-2. Checking Coordinate Space:
-   - InputManager uses:
-     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-   - This assumes the canvas covers the WHOLE window and is not offset.
-   - If canvas is smaller (e.g. UI bars), this is WRONG.
-   - Checking style.css...
-
-3. Findings:
-   - style.css: body { margin: 0; overflow: hidden; } canvas { display: block; }
-   - main.js: renderer.setSize(window.innerWidth, window.innerHeight);
-   - Implementation appears to assume full screen.
-
-4. Potential Issue: RAYCASTER vs PLANE
-   - When off-screen, Raycaster might be failing or Plane intersection is wrong.
-   - Or maybe the "Clamping" logic is flawed?
-   - Max Grid Size: 50?
-   - If clamping results in same start/end, does it draw?
-   - Check handleInput logic.
-
-5. Added Logging to InputManager (Pending...)
 [2026-01-20 09:45:31] COMMIT Road: Start(16,36) End(16,0) Source:Raycast
 [2026-01-20 09:45:32] COMMIT Road: Start(28,23) End(0,23) Source:Raycast
 [2026-01-20 09:45:46] COMMIT Road: Start(25,15) End(0,15) Source:Raycast
-[2026-01-20 10:29:25] COMMIT Road: Start(22,39) End(22,0) Source:Raycast
-[2026-01-20 10:29:27] COMMIT Road: Start(11,39) End(11,0) Source:Raycast
-[2026-01-20 10:29:29] COMMIT Road: Start(0,8) End(39,8) Source:Raycast
-[2026-01-20 10:29:30] COMMIT Road: Start(0,15) End(39,15) Source:Raycast
-[2026-01-20 10:29:31] COMMIT Road: Start(0,22) End(39,22) Source:Raycast
-[2026-01-20 10:29:33] COMMIT Road: Start(0,29) End(39,29) Source:Raycast
-[2026-01-20 10:29:35] COMMIT Road: Start(29,39) End(29,0) Source:Raycast
-[2026-01-20 10:29:39] COMMIT Road: Start(5,39) End(5,0) Source:Raycast
-[2026-01-20 10:29:41] COMMIT Road: Start(16,0) End(16,39) Source:Raycast
-[2026-01-20 10:29:44] COMMIT Road: Start(0,33) End(0,30) Source:Raycast
-[2026-01-20 10:29:47] COMMIT Road: Start(0,35) End(39,35) Source:Raycast
-[2026-01-20 11:16:33] COMMIT Road: Start(20,39) End(20,0) Source:Raycast
-[2026-01-20 11:16:34] COMMIT Road: Start(0,18) End(39,18) Source:Raycast
-[2026-01-20 11:16:36] COMMIT Road: Start(0,7) End(39,7) Source:Raycast
-[2026-01-20 11:16:38] COMMIT Road: Start(0,24) End(39,24) Source:Raycast
-[2026-01-20 11:17:35] COMMIT Road: Start(9,0) End(9,39) Source:Raycast
-[2026-01-20 11:17:37] COMMIT Road: Start(0,29) End(39,29) Source:Raycast
-[2026-01-20 11:17:42] COMMIT Road: Start(26,0) End(26,23) Source:Raycast
-[2026-01-20 11:17:51] COMMIT Road: Start(28,25) End(28,39) Source:Raycast
-[2026-01-20 11:17:54] COMMIT Road: Start(32,0) End(32,18) Source:Raycast
-[2026-01-20 11:17:58] COMMIT Road: Start(0,12) End(31,12) Source:Raycast
+[2026-01-24 10:21:00] COMMIT Road: Start(9,39) End(9,0) Source:Raycast
+[2026-01-24 10:21:00] COMMIT Road: Start(19,39) End(19,0) Source:Raycast
+[2026-01-24 10:21:01] COMMIT Road: Start(28,39) End(28,0) Source:Raycast
+[2026-01-24 10:21:02] COMMIT Road: Start(0,8) End(39,8) Source:Raycast
+[2026-01-24 10:21:03] COMMIT Road: Start(0,19) End(39,19) Source:Raycast
+[2026-01-24 10:21:04] COMMIT Road: Start(0,28) End(39,28) Source:Raycast
+[2026-01-24 10:25:56] COMMIT Road: Start(15,15) End(15,9) Source:Raycast
+[2026-01-24 10:35:06] COMMIT Road: Start(13,39) End(13,0) Source:Raycast
+[2026-01-24 10:35:07] COMMIT Road: Start(28,39) End(28,0) Source:Raycast
+[2026-01-24 10:35:08] COMMIT Road: Start(0,9) End(39,9) Source:Raycast
+[2026-01-24 10:35:09] COMMIT Road: Start(0,17) End(39,17) Source:Raycast
+[2026-01-24 10:35:10] COMMIT Road: Start(0,27) End(39,27) Source:Raycast
+[2026-01-24 10:35:11] COMMIT Road: Start(21,39) End(21,0) Source:Raycast
+[2026-01-24 10:35:13] COMMIT Road: Start(6,39) End(6,0) Source:Raycast
+[2026-01-24 10:55:17] COMMIT Road: Start(17,0) End(17,0) Source:Raycast
+[2026-01-24 10:56:16] COMMIT Road: Start(15,39) End(15,39) Source:Raycast
+[2026-01-24 10:56:18] COMMIT Road: Start(15,39) End(15,39) Source:Raycast
+[2026-01-24 11:24:18] COMMIT Road: Start(9,20) End(9,9) Source:Raycast
+[2026-01-24 11:24:29] COMMIT Road: Start(10,10) End(10,24) Source:Raycast
+[2026-01-24 11:24:37] COMMIT Road: Start(16,28) End(16,13) Source:Raycast
+[2026-01-24 11:24:44] COMMIT Road: Start(15,4) End(33,4) Source:Raycast
+[2026-01-24 11:24:52] COMMIT Road: Start(8,26) End(8,8) Source:Raycast
+[2026-01-24 11:29:59] COMMIT Road: Start(0,11) End(39,11) Source:Raycast
+[2026-01-24 11:30:06] COMMIT Road: Start(29,0) End(29,22) Source:Raycast
+[2026-01-24 12:08:33] COMMIT Road: Start(2,39) End(2,0) Source:Raycast
+[2026-01-24 12:08:35] COMMIT Road: Start(9,39) End(9,0) Source:Raycast
+[2026-01-24 12:08:36] COMMIT Road: Start(23,39) End(23,0) Source:Raycast
+[2026-01-24 12:08:38] COMMIT Road: Start(18,0) End(18,39) Source:Raycast
+[2026-01-24 12:08:39] COMMIT Road: Start(0,30) End(39,30) Source:Raycast
+[2026-01-24 12:08:39] COMMIT Road: Start(0,12) End(39,12) Source:Raycast
+[2026-01-24 12:08:40] COMMIT Road: Start(0,21) End(39,21) Source:Raycast
+[2026-01-24 12:08:41] COMMIT Road: Start(0,5) End(39,5) Source:Raycast
+[2026-01-24 12:08:43] COMMIT Road: Start(30,39) End(30,0) Source:Raycast
+[2026-02-09 07:16:23] COMMIT Road: Start(2,37) End(2,0) Source:Raycast
+[2026-02-09 07:16:52] COMMIT Road: Start(7,39) End(7,7) Source:Raycast
+[2026-02-09 07:16:55] COMMIT Road: Start(39,7) End(39,39) Source:Raycast
+[2026-02-09 07:16:58] COMMIT Road: Start(7,39) End(7,7) Source:Raycast
+[2026-02-09 07:17:00] COMMIT Road: Start(39,7) End(39,39) Source:Raycast
+[2026-02-09 07:17:03] COMMIT Road: Start(7,39) End(7,7) Source:Raycast
+[2026-02-09 07:17:38] COMMIT Road: Start(0,21) End(39,21) Source:Raycast
+[2026-02-09 07:17:41] COMMIT Road: Start(39,18) End(0,18) Source:Raycast
+[2026-02-09 07:17:44] COMMIT Road: Start(0,21) End(39,21) Source:Raycast
+[2026-02-09 07:17:47] COMMIT Road: Start(39,18) End(0,18) Source:Raycast
+[2026-02-09 07:17:49] COMMIT Road: Start(0,21) End(39,21) Source:Raycast
+[2026-02-09 07:19:14] COMMIT Road: Start(8,39) End(8,0) Source:Raycast
+[2026-02-09 07:19:16] COMMIT Road: Start(20,0) End(20,39) Source:Raycast
+[2026-02-09 07:19:18] COMMIT Road: Start(28,39) End(28,0) Source:Raycast
+[2026-02-09 07:19:20] COMMIT Road: Start(0,8) End(39,8) Source:Raycast
+[2026-02-09 07:19:21] COMMIT Road: Start(0,19) End(39,19) Source:Raycast
+[2026-02-09 07:19:23] COMMIT Road: Start(0,29) End(39,29) Source:Raycast
+[2026-02-09 07:20:56] COMMIT Road: Start(9,20) End(9,9) Source:Raycast
+[2026-02-09 07:21:14] COMMIT Road: Start(11,25) End(26,25) Source:Raycast
+[2026-02-09 07:21:41] COMMIT Road: Start(1,24) End(1,1) Source:Raycast
+[2026-02-09 07:21:46] COMMIT Road: Start(6,29) End(6,6) Source:Raycast
+[2026-02-09 07:22:03] COMMIT Road: Start(15,20) End(15,35) Source:Raycast
+[2026-02-09 07:28:10] COMMIT Road: Start(0,25) End(0,25) Source:Raycast
+[2026-02-09 07:29:08] COMMIT Road: Start(14,39) End(14,0) Source:Raycast
+[2026-02-09 07:29:09] COMMIT Road: Start(7,0) End(7,39) Source:Raycast
+[2026-02-09 07:29:11] COMMIT Road: Start(0,33) End(39,33) Source:Raycast
+[2026-02-09 07:29:12] COMMIT Road: Start(0,19) End(39,19) Source:Raycast
+[2026-02-09 07:29:14] COMMIT Road: Start(0,9) End(39,9) Source:Raycast
+[2026-02-09 07:29:15] COMMIT Road: Start(19,0) End(19,39) Source:Raycast
+[2026-02-09 07:29:16] COMMIT Road: Start(27,0) End(27,39) Source:Raycast
+[2026-02-09 07:29:17] COMMIT Road: Start(33,0) End(33,39) Source:Raycast

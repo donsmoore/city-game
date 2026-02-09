@@ -12,7 +12,9 @@ export const CONFIG = {
         PARK: 5,
         SCHOOL: 6,
         HOSPITAL: 7,
-        FIRE_STATION: 8
+        FIRE_STATION: 8,
+        BUILDING_RESIDENTIAL: 9,
+        BUILDING_COMMERCIAL: 10
     },
 
     // Visuals

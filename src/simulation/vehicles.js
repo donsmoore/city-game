@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { disposeObject } from '../render/utils.js';
 import { CONFIG } from '../config.js';
 
 export class VehicleSystem {
@@ -152,6 +153,7 @@ export class VehicleSystem {
 
     removeVehicle(index) {
         const v = this.vehicles[index];
+        disposeObject(v.mesh);
         this.sceneManager.scene.remove(v.mesh);
         this.vehicles.splice(index, 1);
     }

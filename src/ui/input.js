@@ -284,8 +284,11 @@ export class InputManager {
                 this.onPreview(this.activeTool, start, end);
             }
         } else {
-            if (isCommit) return;
-            if (this.activeTool !== 'road_major' && this.activeTool !== 'road_minor') {
+            // Delete tool feels better if it paints while dragging
+            if (this.activeTool === 'delete') {
+                this.onAction(this.activeTool, gridPos, gridPos);
+            } else {
+                if (isCommit) return;
                 let toolStr = this.activeTool;
                 if (this.activeTool.startsWith('park:')) {
                     const dims = this.getToolDimensions();

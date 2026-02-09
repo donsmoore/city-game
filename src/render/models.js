@@ -34,11 +34,6 @@ export const ModelFactory = {
         // Use an array of materials for Box (Right, Left, Top, Bottom, Front, Back)
         // 0:Right, 1:Left, 2:Top, 3:Bottom, 4:Front, 5:Back
 
-        const sideMat = new THREE.MeshLambertMaterial({
-            color: metadata.color,
-            map: ModelFactory.windowTexture
-        });
-
         const roofMat = new THREE.MeshLambertMaterial({ color: 0x333333 }); // Dark roof
 
         // We need to clone the texture to set repeat per mesh?
@@ -70,19 +65,21 @@ export const ModelFactory = {
         const texture = ModelFactory.windowTexture.clone();
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(1, metadata.height); // 1 repeat horizontally, N vertically (floors)
 
-        // Correction: Vertical repeat is strictly floors. Horizontal repeat?
-        // If building is wide, maybe more windows?
-        // Let's scale horizontal repeat by width/depth.
-        // But "width" passed in is 1 or 2 (in grid cells).
-        texture.repeat.set(Math.max(1, width), metadata.height);
+        const hRepeat = Math.max(1, width) * 2;
+        texture.repeat.set(hRepeat, metadata.height);
         texture.needsUpdate = true;
 
         const matWithTexture = new THREE.MeshLambertMaterial({
             color: metadata.color,
             map: texture
         });
+
+        // For commercial Buildings, maybe make them more blue/glassy
+        if (metadata.subtype === 'commercial') {
+            matWithTexture.emissive = new THREE.Color(0x112233);
+            matWithTexture.emissiveIntensity = 0.5;
+        }
 
         const materials = [
             matWithTexture, // Right
@@ -111,27 +108,24 @@ export const ModelFactory = {
         const ctx = canvas.getContext('2d');
 
         // Background (Wall)
-        ctx.fillStyle = '#ffffff'; // White tint, color comes from material
+        ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, 64, 64);
 
-        // Windows (Blueish/Dark) -> multiplied by material color will be dark
-        // Let's make windows black/grey so they stand out against color.
-        // Or using alpha? No, Lambert.
-        // If material is Red, White wall = Red. Black window = Black.
+        // Windows
+        ctx.fillStyle = '#1a1a1a'; // Dark Windows
 
-        ctx.fillStyle = '#444444'; // Dark Grey Windows
+        const gap = 4;
+        const winW = (64 - 4 * gap) / 2;
+        const winH = 40;
 
-        // Draw 2x2 windows pattern or strips
-        // 1 floor = 1 repeat of this texture.
-        // Let's draw a row of windows.
-
-        const gap = 8;
-        const winW = (64 - 3 * gap) / 2;
-        const winH = 40; // Windows take up bulk of height
-
-        // Row 1
+        // Row of windows
         ctx.fillRect(gap, 12, winW, winH);
         ctx.fillRect(gap * 2 + winW, 12, winW, winH);
+
+        // Add a highlight (glass reflection)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.fillRect(gap + 2, 14, winW - 4, 10);
+        ctx.fillRect(gap * 2 + winW + 2, 14, winW - 4, 10);
 
         const tex = new THREE.CanvasTexture(canvas);
         tex.colorSpace = THREE.SRGBColorSpace;
@@ -337,7 +331,36 @@ export const ModelFactory = {
         return group;
     },
 
-    createRoadMesh: (type) => {
-        // ... handled in main currently, but could move here
+    createRoadMesh: (type, connectedX, connectedZ) => {
+        const group = new THREE.Group();
+        const h = 0.1;
+        const geometry = new THREE.BoxGeometry(CONFIG.CELL_SIZE, h, CONFIG.CELL_SIZE);
+        const material = new THREE.MeshLambertMaterial({ color: 0x111111 });
+        const road = new THREE.Mesh(geometry, material);
+        group.add(road);
+
+        const lGeo = new THREE.PlaneGeometry(CONFIG.CELL_SIZE * 0.5, CONFIG.CELL_SIZE * 0.1);
+        const lMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const lines = new THREE.Mesh(lGeo, lMat);
+        lines.position.y = 0.06;
+        lines.rotation.x = -Math.PI / 2;
+
+        if (connectedZ && !connectedX) {
+            lines.rotation.z = Math.PI / 2;
+        } else if (connectedX && connectedZ) {
+            lines.visible = false;
+        } else if (!connectedX && !connectedZ) {
+            // Isolated road, maybe a white dot?
+            const dGeo = new THREE.PlaneGeometry(1, 1);
+            const dMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const dot = new THREE.Mesh(dGeo, dMat);
+            dot.rotation.x = -Math.PI / 2;
+            dot.position.y = 0.06;
+            group.add(dot);
+            lines.visible = false;
+        }
+
+        group.add(lines);
+        return group;
     }
 };
